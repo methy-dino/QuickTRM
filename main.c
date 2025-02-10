@@ -8,6 +8,13 @@
 #include <pty.h>
 #include <signal.h>
 #include "libs/string.h"
+#include <security/pam_appl.h>
+
+
+#include <security/pam_modules.h>
+
+
+#include <security/pam_ext.h>
 #define CLONESCRIPT "#!/bin/bash \ngnome-terminal --working-directory=\" "
 int main(int argL, char** args){
 	char* user = getlogin();
@@ -39,48 +46,37 @@ int main(int argL, char** args){
 	path[userL+16] = '\0';
 	String* str = buildStr(path, userL+16);
 	struct stat st = {0};
+	//pam_start();
 	if (stat(str->string, &st) != 0){
 		mkdir(str->string, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
 	if (argL == 2 && strcmp(args[1], "clone") == 0){
 		// getcwd doesn't finish the string????
 		// data will PROBABLY BE SAFE, but just to be sure
-		char* a = (char*) calloc(128, 128);
+		char* path = (char*) calloc(128, 128);
 		String* cloner = buildStr("#!/bin/bash \ngnome-terminal --working-directory=\"",49);
-		getcwd(a, 128);
-		//appendPtr(cloner, "cd ", 3);
-		//printf("%s \n", cloner->string);
-		int i = 0;
+		getcwd(path, 128);
 		growStr(cloner, 128);
-		//appendNoLen(cloner, a);
-		//cloner->string[cloner->length] = ' ';
-		//cloner->length++;
-		while (a[i] != 0){
-			printf("%c", a[i]);
-			printf("\n");
-			cloner->string[cloner->length] = a[i];
-			printf("%c", cloner->string[cloner->length]);
+		int i = 0;
+		while (path[i] != 0){
+			cloner->string[cloner->length] = path[i];
 			cloner->length++;
 			i++;
 		}
-		for (int i = 0; i < 100; i++){
-			if (cloner->string[i] == '\0'){
-				printf("AAAAAAAA %d",i);
-			}
-		}
 		cloner->string[cloner->length] = '\"';
-		printf("%s \n",cloner->string);
-		//cloner->length--;
-		//cloner->string[cloner->length] = '\n';
 		cloner->length++;
-		//cloner->string[cloner->length] = '\\';
-		//cloner->length++;
 		cloner->string[cloner->length] = '\0';
-
 		printf("cloning directory using:\"%s\" \n", cloner->string);
 		system(cloner->string);
+		return 0;
 	}
 	if (argL > 1 && strcmp(args[1], "load") == 0){
+		appendPtr(str, "/", 1);
+		appendNoLen(str, args[2]);
+		appendPtr(str, ".sh", 3);
+		String* command = buildStr("gnome-terminal -- ", 18);
+		appendStr(command, str);
+		printf("%s", str->string);
 		if (argL < 3){
 			printf("unspecified terminal to load \nPROCESS ABORTED \n");
 			fflush(stdout);
@@ -90,10 +86,15 @@ int main(int argL, char** args){
 			fflush(stdout);
 			return 0;
 		}
-		appendNoLen(str, args[2]);
+		//appendNoLen(command, args[2]);
+		printf("==%d" ,stat("/home/meth/.quickTRM/teste.sh", &st));
 		if (stat(str->string, &st) != 0){
 			printf("invalid terminal to load \nPROCESS ABORTED \n");
+			} else {
+				system(command->string);
 			}	
 		}
+	if (strcmp(args[1], "create") == 0){
+	}
 	return 0;
 }
