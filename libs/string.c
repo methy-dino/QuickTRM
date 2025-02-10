@@ -15,6 +15,16 @@ void growStr(String* str, int inc){
 	str->string = nStr;
 	str->string[str->length] = '\0';
 }
+void growStrClean(String* str, int inc){
+	int newL = inc + str->maxCapacity;
+	char* nStr = (char*)calloc(newL, newL);
+	for (int i = 0; i < str->length; i++){
+		nStr[i] = str->string[i];
+	}
+	free(str->string);
+	str->string = nStr;
+	str->string[str->length] = '\0';
+}
 String* emptyStr(int allocSize){
 	String* string  = (String*)malloc(sizeof(struct string));
 	string->maxCapacity = allocSize;
@@ -84,7 +94,8 @@ void appendNoLen(String* str, char* ptr){
 		str->length++;
 		i++;
 		if (str->length == str->maxCapacity){
-		 growStr(str, 4);
+		 	str->string[str->length] = '\n';
+			growStr(str, 4);
 		}
 	}
 	str->string[str->length] = '\0';

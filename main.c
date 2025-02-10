@@ -8,6 +8,7 @@
 #include <pty.h>
 #include <signal.h>
 #include "libs/string.h"
+#define CLONESCRIPT "#!/bin/bash \ngnome-terminal --working-directory=\" "
 int main(int argL, char** args){
 	char* user = getlogin();
 	int userL = 0;
@@ -41,22 +42,58 @@ int main(int argL, char** args){
 	if (stat(str->string, &st) != 0){
 		mkdir(str->string, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
-	if (argL == 2 && args[1] == "clone"){
+	if (argL == 2 && strcmp(args[1], "clone") == 0){
+		// getcwd doesn't finish the string????
+		// data will PROBABLY BE SAFE, but just to be sure
+		char* a = (char*) calloc(128, 128);
+		String* cloner = buildStr("#!/bin/bash \ngnome-terminal --working-directory=\"",49);
+		getcwd(a, 128);
+		//appendPtr(cloner, "cd ", 3);
+		//printf("%s \n", cloner->string);
+		int i = 0;
+		growStr(cloner, 128);
+		//appendNoLen(cloner, a);
+		//cloner->string[cloner->length] = ' ';
+		//cloner->length++;
+		while (a[i] != 0){
+			printf("%c", a[i]);
+			printf("\n");
+			cloner->string[cloner->length] = a[i];
+			printf("%c", cloner->string[cloner->length]);
+			cloner->length++;
+			i++;
+		}
+		for (int i = 0; i < 100; i++){
+			if (cloner->string[i] == '\0'){
+				printf("AAAAAAAA %d",i);
+			}
+		}
+		cloner->string[cloner->length] = '\"';
+		printf("%s \n",cloner->string);
+		//cloner->length--;
+		//cloner->string[cloner->length] = '\n';
+		cloner->length++;
+		//cloner->string[cloner->length] = '\\';
+		//cloner->length++;
+		cloner->string[cloner->length] = '\0';
 
+		printf("cloning directory using:\"%s\" \n", cloner->string);
+		system(cloner->string);
 	}
-	if (argL > 1 && strcmp(args[2], "load")){
+	if (argL > 1 && strcmp(args[1], "load") == 0){
 		if (argL < 3){
-			printf("unspecified terminal to load \n ABORTED \n");
-			return 1;
+			printf("unspecified terminal to load \nPROCESS ABORTED \n");
+			fflush(stdout);
+			return 0;
 		} else if (argL > 3){
-			printf("invalid parameter quantity \n ABORTED \n");
-			return 1;
+			printf("invalid parameter quantity \nPROCESS ABORTED \n");
+			fflush(stdout);
+			return 0;
 		}
 		appendNoLen(str, args[2]);
 		if (stat(str->string, &st) != 0){
-			printf("invalid terminal to load \n ABORTED \n");
-		}	
-	}
-	printf("done\n");
+			printf("invalid terminal to load \nPROCESS ABORTED \n");
+			}	
+		}
 	return 0;
 }
