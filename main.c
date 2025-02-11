@@ -9,7 +9,7 @@
 #include <signal.h>
 #include "libs/string.h"
 #include <security/pam_appl.h>
-
+#include <fcntl.h>
 
 #include <security/pam_modules.h>
 
@@ -95,6 +95,17 @@ int main(int argL, char** args){
 			}	
 		}
 	if (strcmp(args[1], "create") == 0){
+		if (argL != 3){
+			printf("failed to parse arguments, invalid quantity \n");
+			return 0;
+		}
+		printf("creating terminal template %s: \n", args[2]);
+		appendPtr(str, "/", 1);
+		appendNoLen(str, args[2]);
+		appendPtr(str, ".sh", 3);
+		//make file and stuffies
+		int file = open(str->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
+		write(file, "ahdahds", 7);  
 	}
 	return 0;
 }
