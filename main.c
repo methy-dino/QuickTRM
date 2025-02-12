@@ -11,12 +11,6 @@
 #include "libs/string.h"
 #include <security/pam_appl.h>
 #include <fcntl.h>
-
-#include <security/pam_modules.h>
-
-
-#include <security/pam_ext.h>
-#define CLONESCRIPT "#!/bin/bash \ngnome-terminal --working-directory=\" "
 int main(int argL, char** args){
 	char* user = getlogin();
 	int userL = 0;
@@ -49,23 +43,39 @@ int main(int argL, char** args){
 	struct stat st = {0};
 	//pam_start();
 	if (stat(str->string, &st) != 0){
+		printf("no file storage folder found, creating a new one\n");
 		mkdir(str->string, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
 	String* configs = cloneStr(str);
-	appendPtr(configs, "/settings", 9);
+	appendPtr(configs, "/settings.txt", 9);
 	int settings;
 	if (stat(configs->string, &st) != 0) {
 		settings = open(configs->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
-		write(settings, "gnome-terminal --\nvim ", 23);
+		printf("settings not found, initializing new settings\n");
+		write(settings, "gnome-terminal -- \nvim ", 22);
+		close(settings);
 	}
-	settings = open(configs->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
-	char rawSettings[128];
-	//read(settings, rawSettings, 128);
+	FILE* file;
+        file = fopen(configs->string, "r");
+	String* terminal = emptyStr(64);
+	char read[64];
+	fgets(read, 64, file);
+	appendNoLen(terminal, read);
+	terminal->length--;
+	terminal->string[terminal->length] = '\0';
+	String* editor = emptyStr(64);
+	char read2[64];
+	fgets(read2, 64, file);
+	appendNoLen(editor, read2);
+	fclose(file);
 	if (argL == 2 && strcmp(args[1], "clone") == 0){
 		// getcwd doesn't finish the string????
 		// data will PROBABLY BE SAFE, but just to be sure
-		char* path = (char*) calloc(128, 128);
-		String* cloner = buildStr("#!/bin/bash \ngnome-terminal --working-directory=\"",49);
+		String* cloner = buildStr("#!/bin/bash \n", 13);
+		appendStr(cloner, terminal);
+		// remove the space after "--"
+		cloner->length--;
+		appendNoLen(cloner, "working-directory=\"");
 		getcwd(path, 128);
 		growStr(cloner, 128);
 		int i = 0;
@@ -84,7 +94,7 @@ int main(int argL, char** args){
 		appendPtr(str, "/", 1);
 		appendNoLen(str, args[2]);
 		appendPtr(str, ".sh", 3);
-		String* command = buildStr("gnome-terminal -- ", 18);
+		String* command = cloneStr(terminal);
 		appendStr(command, str);
 		printf("%s", str->string);
 		if (argL < 3){
@@ -107,11 +117,10 @@ int main(int argL, char** args){
 			printf("\033[31m failed to parse arguments, invalid quantity \n\033[0m");
 			return 0;
 		}
-		String* openVim = buildStr("vim ", 4);
 		appendPtr(str, "/", 1);
 		appendNoLen(str, args[2]);
 		appendPtr(str, ".sh", 3);
-		appendStr(openVim, str);
+		appendStr(editor, str);
 		if (access(str->string, F_OK) !=0){
 			printf("creating terminal template %s: \n", args[2]);
 			String* flagExec = buildStr("chmod +x ", 9);
@@ -135,14 +144,14 @@ int main(int argL, char** args){
 			//write(file, "aa", 2);
 			write(file, baseCode->string, baseCode->length);
 			system(flagExec->string);
-			system(openVim->string);
+			system(editor->string);
 		} else {
 			printf("a saved terminal with that name already exists, do you wish to edit it? (y/n) ");
 			char input;
 			while (0==0){
 				scanf("%c", &input);
 				if (input == 'y' || input == 'Y'){
-					system(openVim->string);
+					system(editor->string);
 					return 0;
 				} else if (input == 'n' || input == 'N'){
 					return 0;
@@ -181,6 +190,33 @@ int main(int argL, char** args){
 				printf("· %s\n", currFile->d_name);
 			}
 		}
+	} else if (argL > 2 && strcmp(args[1], "editor") == 0){
+		FILE* set = fopen(configs->string, "w");
+		fwrite(terminal->string, terminal->length, 1, set);
+		fwrite("\n", 1, 1, set);
+		int i = 0;
+		while (args[2][i] !=  '\0'){
+			i++;
+		}
+		fwrite(args[2], i, 1, set);	
+		printf("· terminal:\"%s\" \n", terminal->string);
+		printf("· editor: \"%s\" \n", args[2]);
+		fclose(set);
+	} else if (argL > 2 && strcmp(args[1], "terminal") == 0){
+		FILE* set = fopen(configs->string, "w");
+		int i = 0;
+		while (args[2][i] !=  '\0'){
+			i++;
+		}
+		fwrite(args[2], i, 1, set);
+		fwrite("\n", 1, 1, set);
+		fwrite(editor->string, editor->length, 1, set);
+		fclose(set);
+		printf("· terminal:\"%s\" \n", args[2]);
+		printf("· editor: \"%s\" \n", editor->string);
+	} else if (argL > 1 && strcmp(args[1], "settings") == 0){	
+		printf("· terminal:\"%s\" \n", terminal->string);
+		printf("· editor: \"%s\" \n", editor->string);
 	} else {
 		printf("\033[31m unrecognized command\n\033[0m");
 	}
