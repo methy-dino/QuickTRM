@@ -13,6 +13,7 @@ void growStr(String* str, int inc){
 	}
 	free(str->string);
 	str->string = nStr;
+	str->maxCapacity = newL;
 	str->string[str->length] = '\0';
 }
 void growStrClean(String* str, int inc){
@@ -78,7 +79,7 @@ void appendArr(String* str, char chars[], int arrL){
 }
 
 void appendPtr(String* str, char* ptr, int ptrLen){
-	if (str->maxCapacity < str->length + ptrLen){
+	while (str->maxCapacity < str->length + ptrLen+1){
 		 growStr(str, ptrLen * 1.5);
 	}
 	for (int i = 0; i < ptrLen; i++){	
@@ -94,7 +95,7 @@ void appendNoLen(String* str, char* ptr){
 		str->length++;
 		i++;
 		if (str->length == str->maxCapacity){
-		 	str->string[str->length] = '\n';
+		 	//str->string[str->length] = '\n';
 			growStr(str, 4);
 		}
 	}
