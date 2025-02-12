@@ -96,7 +96,6 @@ int main(int argL, char** args){
 		appendPtr(str, ".sh", 3);
 		String* command = cloneStr(terminal);
 		appendStr(command, str);
-		printf("%s", str->string);
 		if (argL < 3){
 			printf("\033[31m unspecified terminal to load \nPROCESS ABORTED \n\033[0m");
 			fflush(stdout);
@@ -124,24 +123,15 @@ int main(int argL, char** args){
 		if (access(str->string, F_OK) !=0){
 			printf("creating terminal template %s: \n", args[2]);
 			String* flagExec = buildStr("chmod +x ", 9);
-			printf("a\n");
 			appendStr(flagExec, str);
 			String* baseCode = buildStr("#/bash/sh\n",10);
 			appendPtr(baseCode, "cd ", 3);
 			char currDir[256];
 			getcwd(currDir, 256);
 			appendNoLen(baseCode, currDir);
-			//appendNoLen(baseCode, currDir);
-		//write(file, "#/bash/sh\n", 10);
-		//write(file, "cd ", 3);
-	        //write(file, str->string, str->length);
-		//write(file, "\n", 1);
-		//write(file, "exec bash", 9);	
-			//printf("%d <-> %d\n", baseCode->length, baseCode->maxCapacity);
 			appendPtr(baseCode, "\n", 1);
 			appendPtr(baseCode, "exec bash", 9);
 			int file = open(str->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
-			//write(file, "aa", 2);
 			write(file, baseCode->string, baseCode->length);
 			system(flagExec->string);
 			system(editor->string);
