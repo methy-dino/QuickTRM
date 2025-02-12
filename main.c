@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <dirent.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <pty.h>
@@ -77,23 +78,23 @@ int main(int argL, char** args){
 		appendStr(command, str);
 		printf("%s", str->string);
 		if (argL < 3){
-			printf("unspecified terminal to load \nPROCESS ABORTED \n");
+			printf("\033[31m unspecified terminal to load \nPROCESS ABORTED \n\033[0m");
 			fflush(stdout);
 			return 0;
 		} else if (argL > 3){
-			printf("invalid parameter quantity \nPROCESS ABORTED \n");
+			printf("\033[31m invalid parameter quantity \nPROCESS ABORTED \n\033[0m");
 			fflush(stdout);
 			return 0;
 		}
 		//appendNoLen(command, args[2]);
 		if (stat(str->string, &st) != 0){
-			printf("invalid terminal to load \nPROCESS ABORTED \n");
+			printf("\033[31m invalid terminal to load \nPROCESS ABORTED \n\033[0m");
 			} else {
 				system(command->string);
 			}	
 		} else if (strcmp(args[1], "create") == 0){
 		if (argL != 3){
-			printf("failed to parse arguments, invalid quantity \n");
+			printf("\033[31m failed to parse arguments, invalid quantity \n\033[0m");
 			return 0;
 		}
 		String* openVim = buildStr("vim ", 4);
@@ -126,7 +127,7 @@ int main(int argL, char** args){
 			//system(flagExec->string);
 			system(openVim->string);
 		} else {
-			printf("saved terminal instance already exists, do you wish to edit it? (y/n)");
+			printf("a saved terminal with that name already exists, do you wish to edit it? (y/n) ");
 			char input;
 			while (0==0){
 				scanf("%c", &input);
@@ -147,11 +148,31 @@ int main(int argL, char** args){
 			if (remove(currFilePath->string) == 0){
 				printf("removed saved terminal named %s\n", args[i]);
 			} else{
-				printf("failed to remove saved terminal named %s\n", args[i]);
+				printf("\033[31m failed to remove saved terminal named %s\n\033[0m", args[i]);
+			}
+		}
+	} else if (strcmp(args[1], "list") == 0 || strcmp(args[1], "view") == 0 || strcmp(args[1], "saves") == 0){
+		DIR* folder = opendir(str->string);
+		int currLen = 0;
+		struct dirent* currFile;
+		printf("the current saved terminals are: \n");
+		while ((currFile=readdir(folder)) != NULL){
+			if (!strcmp (currFile->d_name, "."))
+           			 continue;
+        		if (!strcmp (currFile->d_name, ".."))
+            			continue;
+			// cuts .sh out of the name and doesn't log undesired files
+			currLen = 0;
+			while (currFile->d_name[currLen] != '\0'){
+				currLen++;
+			}
+			if (currFile->d_name[currLen - 1] == 'h' && currFile->d_name[currLen - 2] == 's'){
+				currFile->d_name[currLen - 3] = '\0';
+				printf("· %s\n", currFile->d_name);
 			}
 		}
 	} else {
-		printf("unrecognized command\n");
+		printf("\033[31m unrecognized command\n\033[0m");
 	}
 	return 0;
 }
