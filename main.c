@@ -51,6 +51,16 @@ int main(int argL, char** args){
 	if (stat(str->string, &st) != 0){
 		mkdir(str->string, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
+	String* configs = cloneStr(str);
+	appendPtr(configs, "/settings", 9);
+	int settings;
+	if (stat(configs->string, &st) != 0) {
+		settings = open(configs->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
+		write(settings, "gnome-terminal --\nvim ", 23);
+	}
+	settings = open(configs->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
+	char rawSettings[128];
+	//read(settings, rawSettings, 128);
 	if (argL == 2 && strcmp(args[1], "clone") == 0){
 		// getcwd doesn't finish the string????
 		// data will PROBABLY BE SAFE, but just to be sure
@@ -92,7 +102,7 @@ int main(int argL, char** args){
 			} else {
 				system(command->string);
 			}	
-		} else if (strcmp(args[1], "create") == 0){
+		} else if (argL > 1 && strcmp(args[1], "create") == 0){
 		if (argL != 3){
 			printf("\033[31m failed to parse arguments, invalid quantity \n\033[0m");
 			return 0;
@@ -124,7 +134,7 @@ int main(int argL, char** args){
 			int file = open(str->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
 			//write(file, "aa", 2);
 			write(file, baseCode->string, baseCode->length);
-			//system(flagExec->string);
+			system(flagExec->string);
 			system(openVim->string);
 		} else {
 			printf("a saved terminal with that name already exists, do you wish to edit it? (y/n) ");
@@ -139,7 +149,7 @@ int main(int argL, char** args){
 				}
 			}
 		}
-	} else if (strcmp(args[1], "delete") == 0){
+	} else if (argL > 1 && strcmp(args[1], "delete") == 0){
 		appendPtr(str, "/", 1);
 		for (int i = 2; i < argL; i++){
 			String* currFilePath = cloneStr(str);
@@ -151,7 +161,7 @@ int main(int argL, char** args){
 				printf("\033[31m failed to remove saved terminal named %s\n\033[0m", args[i]);
 			}
 		}
-	} else if (strcmp(args[1], "list") == 0 || strcmp(args[1], "view") == 0 || strcmp(args[1], "saves") == 0){
+	} else if (argL > 1 && (strcmp(args[1], "list") == 0 || strcmp(args[1], "view") == 0 || strcmp(args[1], "saves") == 0)){
 		DIR* folder = opendir(str->string);
 		int currLen = 0;
 		struct dirent* currFile;
