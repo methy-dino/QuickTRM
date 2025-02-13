@@ -93,30 +93,36 @@ int main(int argL, char** args){
 	} else if (argL > 1 && strcmp(args[1], "load") == 0){
 		appendPtr(str, "/", 1);	
 		String* command;
-		if (argL > 2 && strcmp(args[2], "local") == 0){
+		int i;
+		if (argL > 3 && strcmp(args[2], "local") == 0){
 			command = emptyStr(20);
 			appendNoLen(str, args[3]);
+			i = 3;
 		} else {
 			command = cloneStr(terminal);
 			appendNoLen(str, args[2]);
+			i = 2;
 		}
-		appendPtr(str, ".sh", 3);
-		appendStr(command, str);
-		if (argL < 3){
-			printf("\033[31m unspecified terminal to load \nPROCESS ABORTED \n\033[0m");
-			fflush(stdout);
-			return 0;
-		} else if (argL > 4){
-			printf("\033[31m invalid parameter quantity \nPROCESS ABORTED \n\033[0m");
-			fflush(stdout);
-			return 0;
-		}
-		//appendNoLen(command, args[2]);
-		if (stat(str->string, &st) != 0){
-			printf("\033[31m invalid terminal to load \nPROCESS ABORTED \n\033[0m");
+		while (i < argL){
+			String* clonePath = cloneStr(str);
+			String*	cloneCommand = cloneStr(command);
+		       	appendPtr(clonePath, ".sh", 3);
+			appendStr(cloneCommand, clonePath);
+			if (argL < 3){
+				printf("\033[31m unspecified terminal to load \nPROCESS ABORTED \n\033[0m");
+				fflush(stdout);
+				return 0;
+			}
+				//appendNoLen(command, args[2]);
+			if (stat(clonePath->string, &st) != 0){
+				printf("\033[31m invalid terminal to load \nPROCESS ABORTED \n\033[0m");
 			} else {
-				system(command->string);
-			}	
+					system(cloneCommand->string);
+				}
+			discardStr(cloneCommand);
+			discardStr(clonePath);
+			i++;
+			}
 		} else if (argL > 1 && strcmp(args[1], "create") == 0){
 		if (argL != 3){
 			printf("\033[31m failed to parse arguments, invalid quantity \n\033[0m");
