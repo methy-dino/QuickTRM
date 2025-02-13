@@ -91,16 +91,22 @@ int main(int argL, char** args){
 		system(cloner->string);
 		return 0;
 	} else if (argL > 1 && strcmp(args[1], "load") == 0){
-		appendPtr(str, "/", 1);
-		appendNoLen(str, args[2]);
+		appendPtr(str, "/", 1);	
+		String* command;
+		if (argL > 2 && strcmp(args[2], "local") == 0){
+			command = emptyStr(20);
+			appendNoLen(str, args[3]);
+		} else {
+			command = cloneStr(terminal);
+			appendNoLen(str, args[2]);
+		}
 		appendPtr(str, ".sh", 3);
-		String* command = cloneStr(terminal);
 		appendStr(command, str);
 		if (argL < 3){
 			printf("\033[31m unspecified terminal to load \nPROCESS ABORTED \n\033[0m");
 			fflush(stdout);
 			return 0;
-		} else if (argL > 3){
+		} else if (argL > 4){
 			printf("\033[31m invalid parameter quantity \nPROCESS ABORTED \n\033[0m");
 			fflush(stdout);
 			return 0;
