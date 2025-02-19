@@ -120,6 +120,23 @@ void loadFiles(char** args, int argL){
 			i++;
 			}
 }
+void buildSave(){
+	String* flagExec = buildStr("chmod +x ", 9);
+	appendStr(flagExec, home);
+	String* baseCode = buildStr("#/bash/sh\n",10);
+	appendPtr(baseCode, "cd ", 3);
+	char currDir[256];	
+	getcwd(currDir, 256);
+	appendNoLen(baseCode, currDir);
+	appendPtr(baseCode, "\n", 1);
+	appendNoLen(baseCode, "#this line keeps the window open\n");
+	appendPtr(baseCode, "exec bash", 9);
+	FILE* file = fopen(home->string, "w+");
+	fwrite(baseCode->string, 1, baseCode->length,file);
+	system(flagExec->string);
+	fclose(file);
+	system(editor->string);
+}
 int main(int argL, char** args){
 	char* user = getlogin();
 	int userL = 0;
@@ -151,23 +168,17 @@ int main(int argL, char** args){
 	home = buildStr(path, userL+16);
 	defaults();
 	loadSettings();
-	struct stat st = {0};
 	if (argL == 2 && strcmp(args[1], "clone") == 0){
-		// getcwd doesn't finish the string????
-		// data will PROBABLY BE SAFE, but just to be sure
 		String* cloner = buildStr("#!/bin/bash \n", 13);
 		appendStr(cloner, terminal);
 		// remove the space after "--"
-		cloner->length--;
-		appendNoLen(cloner, "working-directory=\"");
-		getcwd(path, 128);
-		growStr(cloner, 128);
-		int i = 0;
-		while (path[i] != 0){
-			cloner->string[cloner->length] = path[i];
-			cloner->length++;
-			i++;
+		if (cloner->string[cloner->length-1] == ' '){
+			cloner->length--;
 		}
+		appendNoLen(cloner, "working-directory=\"");
+		char currDir[128];
+		getcwd(currDir, 127);
+		appendNoLen(cloner, currDir);
 		cloner->string[cloner->length] = '\"';
 		cloner->length++;
 		cloner->string[cloner->length] = '\0';
@@ -185,21 +196,9 @@ int main(int argL, char** args){
 	appendNoLen(home, args[2]);
 	appendPtr(home, ".sh", 3);
 	appendStr(editor, home);
-	if (access(home->string, F_OK) !=0){
-		printf("creating terminal template %s: \n", args[2]);
-		String* flagExec = buildStr("chmod +x ", 9);
-		appendStr(flagExec, home);
-		String* baseCode = buildStr("#/bash/sh\n",10);
-		appendPtr(baseCode, "cd ", 3);
-		char currDir[256];
-		getcwd(currDir, 256);
-		appendNoLen(baseCode, currDir);
-		appendPtr(baseCode, "\n", 1);
-		appendPtr(baseCode, "exec bash", 9);
-		int file = open(home->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
-		write(file, baseCode->string, baseCode->length);
-		system(flagExec->string);
-		system(editor->string);
+	if (access(home->string, F_OK) != 0){
+		buildSave();
+		printf("created terminal template %s \n", args[2]);
 	} else {
 		printf("a saved terminal with that name already exists, do you wish to edit it? (y/n)  ");
 		char input;
@@ -213,7 +212,7 @@ int main(int argL, char** args){
 			}
 		}
 	}
-	} else if (argL > 1 && strcmp(args[1], "delete") == 0){
+	} else if (argL > 1 && (strcmp(args[1], "delete") == 0 || strcmp(args[1], "remove"))){
 		delete(args, argL);
 	} else if (argL > 1 && (strcmp(args[1], "list") == 0 || strcmp(args[1], "view") == 0 || strcmp(args[1], "saves") == 0)){
 		listSaves();
