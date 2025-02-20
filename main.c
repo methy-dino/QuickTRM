@@ -32,6 +32,7 @@ void defaults(){
 	}
 }
 void loadSettings(){
+	appendPtr(home, "\"", 1);
 	FILE* file;
     file = fopen(configs->string, "r");
 	terminal = emptyStr(64);
@@ -44,6 +45,8 @@ void loadSettings(){
 	fgets(read, 128, file);
 	appendNoLen(editor, read);
 	fclose(file);
+	home->length--;
+	home->string[home->length] = '\0';
 }
 void listSaves(){
 	DIR* folder = opendir(home->string);
@@ -72,13 +75,42 @@ void delete(char** args, int argL){
 	appendPtr(home, "/", 1);
 	// save length for terminator shenanigans.
 	int prevL = home->length;
+	if (strcmp(args[2], "ALL SAVES") == 0){
+		DIR* folder = opendir(home->string);
+		int currLen = 0;
+		struct dirent* currFile;
+		while ((currFile=readdir(folder)) != NULL){
+			if (!strcmp (currFile->d_name, ".")){
+           			 continue;
+			}
+      if (!strcmp (currFile->d_name, "..")){
+            			continue;
+			}
+			currLen = 0;
+			while (currFile->d_name[currLen] != '\0'){
+				currLen++;
+			}
+			if (currFile->d_name[currLen - 1] == 'h' && currFile->d_name[currLen - 2] == 's'){
+				appendPtr(home, currFile->d_name, currLen);
+				currFile->d_name[currLen-3] = '\0';
+				if (remove(home->string) == 0){
+						printf("removed saved terminal named \"%s\"\n", currFile->d_name);
+					} else {
+						printf("\033[31m failed to remove saved terminal named \"%s\"\n\033[0m", currFile->d_name);
+					}	
+			}
+			home->length = prevL;
+			home->string[prevL] = '\0';
+		}
+		return;
+	}
 	for (int i = 2; i < argL; i++){
 		appendNoLen(home, args[i]);
 		appendPtr(home, ".sh", 3);
 		if (remove(home->string) == 0){
-			printf("removed saved terminal named %s\n", args[i]);
+			printf("removed saved terminal named \"%s\"\n", args[i]);
 		} else {
-			printf("\033[31m failed to remove saved terminal named %s\n\033[0m", args[i]);
+			printf("\033[31m failed to remove saved terminal named \"%s\"\n\033[0m", args[i]);
 		}
 		home->length = prevL;
 		home->string[prevL] = '\0';
@@ -86,56 +118,66 @@ void delete(char** args, int argL){
 }
 void loadFiles(char** args, int argL){
 	struct stat st = {0};
-	appendPtr(home, "/", 1);	
+	appendPtr(home, "/", 1);
 		String* command;
+		int prevHL = home->length;
 		int i;
 		if (argL > 3 && strcmp(args[2], "local") == 0){
 			command = emptyStr(20);
-			appendNoLen(home, args[3]);
 			i = 3;
 		} else {
 			command = cloneStr(terminal);
-			appendNoLen(home, args[2]);
 			i = 2;
 		}
-		while (i < argL){
-			String* clonePath = cloneStr(home);
-			String*	cloneCommand = cloneStr(command);
-		    appendPtr(clonePath, ".sh", 3);
-			appendStr(cloneCommand, clonePath);
-			if (argL < 3){
-				printf("\033[31m unspecified terminal to load \nPROCESS ABORTED \n\033[0m");
-				fflush(stdout);
-				return;
-			}
-				//appendNoLen(command, args[2]);
-			if (stat(clonePath->string, &st) != 0){
-				printf("\033[31m invalid terminal to load \nPROCESS ABORTED \n\033[0m");
-			} else {
-					system(cloneCommand->string);
+		appendPtr(command, "\"", 1);
+		int prevCL = command->length;
+		if (strcmp(args[i],"ALL SAVES") == 0){
+			DIR* folder = opendir(home->string);
+			int currLen = 0;
+			struct dirent* currFile;
+			while ((currFile=readdir(folder)) != NULL){
+				if (!strcmp (currFile->d_name, ".")){
+        	   		continue;
 				}
+      	if (!strcmp (currFile->d_name, "..")){
+        	    	continue;
+			}
+			currLen = 0;
+			while (currFile->d_name[currLen] != '\0'){
+				currLen++;
+			}
+			if (currFile->d_name[currLen - 1] == 'h' && currFile->d_name[currLen - 2] == 's'){
+				appendStr(command, home);
+				appendPtr(command, currFile->d_name, currLen);
+				appendPtr(command, "\"", 1);
+				system(command->string);
+			}
+			command->length = prevCL;
+			command->string[prevCL] = '\0';
+		}
+		return;
+		}
+
+		while (i < argL){
+			appendNoLen(home, args[i]);
+			appendPtr(home, ".sh", 3);
+			if (stat(home->string, &st) != 0){
+				printf("\033[31m invalid terminal to load: \"%s\"\nPROCESS ABORTED \n\033[0m", args[i]);
+			} else {
+					appendStr(command, home);
+					appendPtr(command, "\"", 1);
+					system(command->string);
+			}
 			// ehhhh why free memory, arena is going to close right after this line anyways.
 			//discardStr(cloneCommand);
 			//discardStr(clonePath);
 			i++;
+			command->length = prevCL;
+			command->string[prevCL] = '\0';
+			home->length = prevHL;
+			home->string[prevHL] = '\0';
+
 			}
-}
-void buildSave(){
-	String* flagExec = buildStr("chmod +x ", 9);
-	appendStr(flagExec, home);
-	String* baseCode = buildStr("#/bash/sh\n",10);
-	appendPtr(baseCode, "cd ", 3);
-	char currDir[256];	
-	getcwd(currDir, 256);
-	appendNoLen(baseCode, currDir);
-	appendPtr(baseCode, "\n", 1);
-	appendNoLen(baseCode, "#this line keeps the window open\n");
-	appendPtr(baseCode, "exec bash", 9);
-	FILE* file = fopen(home->string, "w+");
-	fwrite(baseCode->string, 1, baseCode->length,file);
-	system(flagExec->string);
-	fclose(file);
-	system(editor->string);
 }
 int main(int argL, char** args){
 	char* user = getlogin();
@@ -169,16 +211,21 @@ int main(int argL, char** args){
 	defaults();
 	loadSettings();
 	if (argL == 2 && strcmp(args[1], "clone") == 0){
+		// getcwd doesn't finish the string????
+		// data will PROBABLY BE SAFE, but just to be sure
 		String* cloner = buildStr("#!/bin/bash \n", 13);
 		appendStr(cloner, terminal);
 		// remove the space after "--"
-		if (cloner->string[cloner->length-1] == ' '){
-			cloner->length--;
-		}
+		cloner->length--;
 		appendNoLen(cloner, "working-directory=\"");
-		char currDir[128];
-		getcwd(currDir, 127);
-		appendNoLen(cloner, currDir);
+		getcwd(path, 128);
+		growStr(cloner, 128);
+		int i = 0;
+		while (path[i] != 0){
+			cloner->string[cloner->length] = path[i];
+			cloner->length++;
+			i++;
+		}
 		cloner->string[cloner->length] = '\"';
 		cloner->length++;
 		cloner->string[cloner->length] = '\0';
@@ -195,10 +242,27 @@ int main(int argL, char** args){
 	appendPtr(home, "/", 1);
 	appendNoLen(home, args[2]);
 	appendPtr(home, ".sh", 3);
-	appendStr(editor, home);
+	String* editorPath = emptyStr(home->length + 2);
+	appendPtr(editorPath, "\"", 1);
+	appendStr(editorPath, home);
+	appendPtr(editorPath, "\"", 1);
+	appendStr(editor, editorPath);
+	printf("%s \n", home->string);
 	if (access(home->string, F_OK) != 0){
-		buildSave();
-		printf("created terminal template %s \n", args[2]);
+		printf("creating terminal template %s: \n", args[2]);
+		String* flagExec = buildStr("chmod +x ", 9);
+		appendStr(flagExec, editorPath);
+		String* baseCode = buildStr("#/bash/sh\n",10);
+		appendPtr(baseCode, "cd ", 3);
+		char currDir[256];
+		getcwd(currDir, 256);
+		appendNoLen(baseCode, currDir);
+		appendPtr(baseCode, "\n", 1);
+		appendPtr(baseCode, "exec bash", 9);
+		int file = open(home->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
+		write(file, baseCode->string, baseCode->length);
+		system(flagExec->string);
+		system(editor->string);
 	} else {
 		printf("a saved terminal with that name already exists, do you wish to edit it? (y/n)  ");
 		char input;
@@ -212,7 +276,7 @@ int main(int argL, char** args){
 			}
 		}
 	}
-	} else if (argL > 1 && (strcmp(args[1], "delete") == 0 || strcmp(args[1], "remove"))){
+	} else if (argL > 1 && (strcmp(args[1], "delete") == 0 || strcmp(args[1], "remove") == 0)){
 		delete(args, argL);
 	} else if (argL > 1 && (strcmp(args[1], "list") == 0 || strcmp(args[1], "view") == 0 || strcmp(args[1], "saves") == 0)){
 		listSaves();
