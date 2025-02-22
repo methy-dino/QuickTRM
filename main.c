@@ -307,6 +307,17 @@ int main(int argL, char** args){
 	} else if (argL > 1 && strcmp(args[1], "settings") == 0){	
 		printf("· terminal:\"%s\" \n", terminal->string);
 		printf("· editor: \"%s\" \n", editor->string);
+	} else if (argL > 1 && strcmp(args[1], "help") == 0){
+		printf("create <name>\nrunning quickTRM create <name> will attempt to create a shell save in it's internal folder (~/.quickTRM), if a save already exists with that name, it will ask confirmation to edit it.\n\n");
+		printf("delete <names>\ndeletes all saves listed, which are separated by spaces, if it fails to delete any, it will throw an error and continue.\n\n");
+		printf("load <names>\nloads the specified terminals within names, separated by spaces, throws an error for each that is non-existant.\n\n");
+		printf("load local <names>\nloads the specified terminals within names, exactly as load does, except it does not open new terminal windows.\n\n");
+		printf("list\nlists all the saved files on the .quickTRM directory, also runs if called quickTRM view.\n\n");
+		printf("clone\nclones the current terminal by opening another terminal in the same directory.\n\n");
+		printf("editor <name>\nchanges the editor on the configurations file (default is \"vim \"), don't forget to quote the name and put a space in the end.\n\n");
+		printf("terminal <name>\nchanges the terminal on the configurations file (default is gnome-terminal -- ).\n\n");
+		printf("settings\ndisplay the currently set terminal, and editor, between quotes.\n\n");
+		printf("help\ndisplays information about all the quickTRM arguments and commands\n");
 	} else {
 		printf("\033[31m unrecognized command\n\033[0m");
 	}

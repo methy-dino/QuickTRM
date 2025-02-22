@@ -38,3 +38,5 @@ changes the terminal on the configurations file (default is ```gnome-terminal --
 
 #### settings
 display the currently set terminal, and editor, between quotes.
+#### help
+displays information about all the quickTRM arguments and commands.
