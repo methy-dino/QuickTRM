@@ -9,12 +9,12 @@
 #include <pty.h>
 #include <signal.h>
 #include "libs/string.h"
-#include <security/pam_appl.h>
 #include <fcntl.h>
 String* configs;
 String* editor;
 String* terminal;
 String* home;
+int local = 0;
 void defaults(){
 	struct stat st = {0};
 	if (stat(home->string, &st) != 0){
@@ -116,19 +116,18 @@ void delete(char** args, int argL){
 		home->string[prevL] = '\0';
 	}
 }
-void loadFiles(char** args, int argL){
+void loadFiles(char** args, int argL, int start){
 	struct stat st = {0};
 	appendPtr(home, "/", 1);
 		String* command;
 		int prevHL = home->length;
 		int i;
-		if (argL > 3 && strcmp(args[2], "local") == 0){
+		if (local){
 			command = emptyStr(20);
-			i = 3;
 		} else {
 			command = cloneStr(terminal);
-			i = 2;
 		}
+		i = start;
 		appendPtr(command, "\"", 1);
 		int prevCL = command->length;
 		if (strcmp(args[i],"ALL SAVES") == 0){
@@ -168,15 +167,11 @@ void loadFiles(char** args, int argL){
 					appendPtr(command, "\"", 1);
 					system(command->string);
 			}
-			// ehhhh why free memory, arena is going to close right after this line anyways.
-			//discardStr(cloneCommand);
-			//discardStr(clonePath);
 			i++;
 			command->length = prevCL;
 			command->string[prevCL] = '\0';
 			home->length = prevHL;
 			home->string[prevHL] = '\0';
-
 			}
 }
 int main(int argL, char** args){
@@ -233,7 +228,12 @@ int main(int argL, char** args){
 		system(cloner->string);
 		return 0;
 	} else if (argL > 1 && strcmp(args[1], "load") == 0){
-		loadFiles(args, argL);
+		int start = 2;
+		if (strcmp(args[2], "local") == 0){
+			local = 1;
+			start++;
+		}
+		loadFiles(args, argL, start);
 	} else if (argL > 1 && strcmp(args[1], "create") == 0){
 	if (argL != 3){
 		printf("\033[31m failed to parse arguments, invalid quantity \n\033[0m");
@@ -319,7 +319,21 @@ int main(int argL, char** args){
 		printf("settings\ndisplay the currently set terminal, and editor, between quotes.\n\n");
 		printf("help\ndisplays information about all the quickTRM arguments and commands\n");
 	} else {
-		printf("\033[31m unrecognized command\n\033[0m");
+		String* fPath = cloneStr(home);
+		// implicit file opening
+		int start = 1;
+		if (strcmp(args[start], "local") == 0){
+			local = 1;
+			start++;
+		}
+		appendNoLen(fPath, args[start]);
+		struct stat st = {0};
+		if (stat(fPath->string, &st) != 0){
+			loadFiles(args, argL, start);
+		} else {
+			printf("\033[31m unrecognized command\n\033[0m");
+		}
+		// no need to free "fPath", since it is right before the process end.
 	}
 	return 0;
 }
