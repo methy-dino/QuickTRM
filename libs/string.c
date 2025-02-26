@@ -88,6 +88,16 @@ void appendPtr(String* str, char* ptr, int ptrLen){
 	}
 	str->string[str->length] = '\0';
 }
+void appendSubPtr(String* str, char* ptr, int start, int end){
+	if (str->maxCapacity < str->length + (end-start)+1){
+		 growStr(str, (end-start) * 1.5);
+	}
+	for (int i = start; i < end; i++){	
+		str->string[str->length] = ptr[i];
+		str->length++;
+	}
+	str->string[str->length] = '\0';
+}
 void appendNoLen(String* str, char* ptr){
 	int i = 0;
 	while (ptr[i] != '\0'){
