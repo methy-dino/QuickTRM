@@ -174,6 +174,32 @@ void loadFiles(char** args, int argL, int start){
 			home->string[prevHL] = '\0';
 			}
 }
+void importFiles(char** args, int argL){
+	String* file_cp = emptyStr(64);
+	appendPtr(file_cp, "cp ", 3);
+	int prev_len = file_cp->length;
+	int file_l = 0;
+	for (int i = 2; i < argL; i++){
+		file_l = strlen(args[i]);
+		if (args[i][file_l-1] == 'h' && args[i][file_l-2] == 's' && args[i][file_l-3] == '.'){
+			appendPtr(file_cp, args[i], file_l);
+			appendPtr(file_cp, " ", 1);
+			//get filename len
+			int j = file_l - 1;
+			while (j > -1 && args[i][j] != '/'){
+				j--;
+			}
+			appendStr(file_cp, home);
+			appendSubPtr(file_cp, args[i], j, file_l);
+			system(file_cp->string);
+		} else {
+			printf("\033[31m file \"%s\" is not a shell file! \n\033[0u", args[i]);
+		}
+		//printf("%s\n",file_cp->string);
+		file_cp->length = prev_len;
+		file_cp->string[prev_len] = '\0';
+	}
+}
 int main(int argL, char** args){
 	char* user = getlogin();
 	int userL = 0;
@@ -318,6 +344,8 @@ int main(int argL, char** args){
 		printf("terminal <name>\nchanges the terminal on the configurations file (default is gnome-terminal -- ).\n\n");
 		printf("settings\ndisplay the currently set terminal, and editor, between quotes.\n\n");
 		printf("help\ndisplays information about all the quickTRM arguments and commands\n");
+	} else if (argL > 1 && strcmp(args[1], "import") == 0){
+		importFiles(args, argL);
 	} else {
 		String* fPath = cloneStr(home);
 		// implicit file opening
