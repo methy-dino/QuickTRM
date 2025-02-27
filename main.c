@@ -50,9 +50,9 @@ void loadSettings(){
 }
 void listSaves(){
 	DIR* folder = opendir(home->string);
-		int currLen = 0;
-		struct dirent* currFile;
-		printf("the current saved terminals are: \n");
+	int currLen = 0;
+	struct dirent* currFile;
+	printf("the current saved terminals are: \n");
 		while ((currFile=readdir(folder)) != NULL){
 			if (!strcmp (currFile->d_name, "."))
            			 continue;
@@ -179,23 +179,52 @@ void importFiles(char** args, int argL){
 	appendPtr(file_cp, "cp ", 3);
 	int prev_len = file_cp->length;
 	int file_l = 0;
+	int has_term = 0;
+	int j = 0;
 	for (int i = 2; i < argL; i++){
-		file_l = strlen(args[i]);
-		if (args[i][file_l-1] == 'h' && args[i][file_l-2] == 's' && args[i][file_l-3] == '.'){
-			appendPtr(file_cp, args[i], file_l);
-			appendPtr(file_cp, " ", 1);
-			//get filename len
-			int j = file_l - 1;
-			while (j > -1 && args[i][j] != '/'){
-				j--;
+		has_term = 0;
+		while (args[i][file_l] != '\0') {
+			if (args[i][file_l] == '.'){
+				has_term = 1;
 			}
-			appendStr(file_cp, home);
-			appendSubPtr(file_cp, args[i], j, file_l);
-			system(file_cp->string);
-		} else {
-			printf("\033[31m file \"%s\" is not a shell file! \n\033[0u", args[i]);
+			else if (args[i][file_l] == '/') {
+				j = file_l;
+				if (args[i][file_l+1] == '.'){ 
+					file_l++;
+				}
+				has_term = 0;
+			}
+			file_l++;
 		}
-		//printf("%s\n",file_cp->string);
+			appendPtr(file_cp, args[i], file_l);
+			//get filename len
+			if (has_term == 1){
+				if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){
+					appendPtr(file_cp, " ", 1);
+					appendStr(file_cp, home);
+					appendSubPtr(file_cp, args[i], j, file_l);
+					system(file_cp->string);
+				} else {
+					printf("\033[31m file \"%s\" is not a shell file! \n\033[0u", args[i]);
+				}
+			} else {
+				appendPtr(file_cp, "/", 1);
+				int dir_l = file_cp->length;
+				// TODO; check if folder exists
+				DIR* folder = opendir(args[i]);
+				struct dirent* curr_file;
+				while ((curr_file = readdir(folder)) != NULL){
+					int sub_l = strlen(curr_file->d_name);
+					if (sub_l > 2 && curr_file->d_name[sub_l-1] == 'h' && curr_file->d_name[sub_l-2] == 's' && curr_file->d_name[sub_l-3] == '.'){
+						appendPtr(file_cp, curr_file->d_name, sub_l);
+						appendPtr(file_cp, " ", 1);
+						appendStr(file_cp, home);
+						system(file_cp->string);
+					}
+					file_cp->length = dir_l;
+				}
+			}
+			//printf("%s\n",file_cp->string);
 		file_cp->length = prev_len;
 		file_cp->string[prev_len] = '\0';
 	}
@@ -239,8 +268,9 @@ int main(int argL, char** args){
 		// remove the space after "--"
 		cloner->length--;
 		appendNoLen(cloner, "working-directory=\"");
-		getcwd(path, 128);
-		growStr(cloner, 128);
+		char cwd[256];
+		getcwd(path, 256);
+		growStr(cloner, 257);
 		int i = 0;
 		while (path[i] != 0){
 			cloner->string[cloner->length] = path[i];
@@ -350,7 +380,7 @@ int main(int argL, char** args){
 		String* fPath = cloneStr(home);
 		// implicit file opening
 		int start = 1;
-		if (strcmp(args[start], "local") == 0){
+		if (argL > 1 && strcmp(args[start], "local") == 0){
 			local = 1;
 			start++;
 		}
