@@ -424,7 +424,9 @@ int main(int argL, char** args){
 		printf("clone\nclones the current terminal by opening another terminal in the same directory.\n\n");
 		printf("editor <name>\nchanges the editor on the configurations file (default is \"vim \"), don't forget to quote the name and put a space in the end.\n\n");
 		printf("terminal <name>\nchanges the terminal on the configurations file (default is gnome-terminal -- ).\n\n");
-		printf("settings\ndisplay the currently set terminal, and editor, between quotes.\n\n");
+		printf("settings\ndisplay the currently set terminal, and editor, between quotes.\n\n");	
+		printf("export <fPath>\n copies all the saved data of quickTRM to the specified directory\n");
+		printf("import <fPath>\n imports the shell files from <fPath> to quickTRM's internal folder\n");
 		printf("help\ndisplays information about all the quickTRM arguments and commands\n");
 	} else if (argL > 1 && strcmp(args[1], "import") == 0){
 		importFiles(args, argL);
