@@ -211,7 +211,20 @@ void importFiles(char** args, int argL){
 				appendPtr(file_cp, "/", 1);
 				int dir_l = file_cp->length;
 				// TODO; check if folder exists
-				DIR* folder = opendir(args[i]);
+				String* full_name = emptyStr(64);
+				if (args[i][0] == '.'){
+					char cwd[256];
+					getcwd(cwd, 256);
+					appendNoLen(full_name, cwd);
+					appendSubPtr(full_name,args[i], 1, file_l);
+				} else {
+					appendPtr(full_name, args[i], file_l);
+				}
+				DIR* folder = opendir(full_name->string);
+				if (folder == NULL) {
+					printf("ERR: FOLDER \"%s\" NOT FOUND \n", full_name->string);
+					continue;
+				}
 				struct dirent* curr_file;
 				while ((curr_file = readdir(folder)) != NULL){
 					int sub_l = strlen(curr_file->d_name);
@@ -386,7 +399,7 @@ int main(int argL, char** args){
 		}
 		appendNoLen(fPath, args[start]);
 		struct stat st = {0};
-		if (stat(fPath->string, &st) != 0){
+		if (stat(fPath->string, &st) == 0){
 			loadFiles(args, argL, start);
 		} else {
 			printf("\033[31m unrecognized command\n\033[0m");
