@@ -1,4 +1,4 @@
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <stdio.h> 
 #include <unistd.h>
 #include <string.h>
@@ -199,7 +199,7 @@ void importFiles(char** args, int argL){
 			appendPtr(file_cp, args[i], file_l);
 			//get filename len
 			if (has_term == 1){
-				if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){
+					if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){
 					appendPtr(file_cp, " ", 1);
 					appendStr(file_cp, home);
 					appendSubPtr(file_cp, args[i], j, file_l);
@@ -210,7 +210,7 @@ void importFiles(char** args, int argL){
 			} else {
 				appendPtr(file_cp, "/", 1);
 				int dir_l = file_cp->length;
-				// TODO; check if folder exists
+				// DONE.
 				String* full_name = emptyStr(64);
 				if (args[i][0] == '.'){
 					char cwd[256];
@@ -241,6 +241,45 @@ void importFiles(char** args, int argL){
 		file_cp->length = prev_len;
 		file_cp->string[prev_len] = '\0';
 	}
+}
+void exportFiles(char** args, int argL){
+	if (argL < 3){
+		printf("no output folder specified.");
+		return;
+	}
+	// TODO: check out validity.
+	String* out_cp = emptyStr(64);
+	String* out_dir = emptyStr(64);
+	appendPtr(out_cp, "cp ", 3);
+	appendStr(out_cp, home);
+	appendPtr(out_cp, "/", 1);
+	if (args[2][0] == '.'){
+		char cwd[256];
+		getcwd(cwd, 256);
+		appendNoLen(out_dir, cwd);
+		appendSubPtr(out_dir, args[2], 1, strlen(args[2]));
+	} else {
+		appendNoLen(out_dir, args[2]);
+	}
+	if (out_dir->string[out_dir->length] != '/'){
+		appendPtr(out_dir, "/", 1);
+	}
+	DIR* home_fol = opendir(home->string);
+	struct dirent* curr_f;
+	int prev_l = out_cp->length;
+	while ((curr_f=readdir(home_fol))!= NULL){
+		if (curr_f->d_name[0] == '.' && (!(curr_f->d_name[1]) || curr_f->d_name[1] == '.')){
+				continue;
+			}
+		appendNoLen(out_cp, curr_f->d_name);
+		appendPtr(out_cp, " ", 1);
+		appendStr(out_cp, out_dir);
+		printf("%s\n", out_cp->string);
+		system(out_cp->string);
+		out_cp->length = prev_l;
+
+	}
+	closedir(home_fol);
 }
 int main(int argL, char** args){
 	char* user = getlogin();
@@ -389,6 +428,8 @@ int main(int argL, char** args){
 		printf("help\ndisplays information about all the quickTRM arguments and commands\n");
 	} else if (argL > 1 && strcmp(args[1], "import") == 0){
 		importFiles(args, argL);
+	} else if (argL > 1 && strcmp(args[1], "export") == 0){
+		exportFiles(args, argL);
 	} else {
 		String* fPath = cloneStr(home);
 		// implicit file opening
