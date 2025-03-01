@@ -50,5 +50,10 @@ changes the terminal on the configurations file (default is ```gnome-terminal --
 
 #### ```settings```
 display the currently set terminal, and editor, between quotes.
+#### ```export <fPath>```
+copies all the saved data of quickTRM to the specified directory
+#### ```import <fPath>```
+imports the shell files from <fPath> to quickTRM's internal folder.
 #### ```help```
 displays information about all the quickTRM arguments and commands.
+
