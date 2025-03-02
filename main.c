@@ -38,12 +38,12 @@ void loadSettings(){
 	terminal = emptyStr(64);
 	char read[128];
 	fgets(read, 128, file);
-	appendNoLen(terminal, read);
+	appendNoLen(terminal, read, 128);
 	terminal->length--;
 	terminal->string[terminal->length] = '\0';
 	editor = emptyStr(64);
 	fgets(read, 128, file);
-	appendNoLen(editor, read);
+	appendNoLen(editor, read, 128);
 	fclose(file);
 	home->length--;
 	home->string[home->length] = '\0';
@@ -105,7 +105,7 @@ void delete(char** args, int argL){
 		return;
 	}
 	for (int i = 2; i < argL; i++){
-		appendNoLen(home, args[i]);
+		appendNoLen(home, args[i], 256);
 		appendPtr(home, ".sh", 3);
 		if (remove(home->string) == 0){
 			printf("removed saved terminal named \"%s\"\n", args[i]);
@@ -158,7 +158,7 @@ void loadFiles(char** args, int argL, int start){
 		}
 
 		while (i < argL){
-			appendNoLen(home, args[i]);
+			appendNoLen(home, args[i], 256);
 			appendPtr(home, ".sh", 3);
 			if (stat(home->string, &st) != 0){
 				printf("\033[31m invalid terminal to load: \"%s\"\nPROCESS ABORTED \n\033[0m", args[i]);
@@ -215,7 +215,7 @@ void importFiles(char** args, int argL){
 				if (args[i][0] == '.'){
 					char cwd[256];
 					getcwd(cwd, 256);
-					appendNoLen(full_name, cwd);
+					appendNoLen(full_name, cwd, 256);
 					appendSubPtr(full_name,args[i], 1, file_l);
 				} else {
 					appendPtr(full_name, args[i], file_l);
@@ -256,10 +256,10 @@ void exportFiles(char** args, int argL){
 	if (args[2][0] == '.'){
 		char cwd[256];
 		getcwd(cwd, 256);
-		appendNoLen(out_dir, cwd);
+		appendNoLen(out_dir, cwd, 256);
 		appendSubPtr(out_dir, args[2], 1, strlen(args[2]));
 	} else {
-		appendNoLen(out_dir, args[2]);
+		appendNoLen(out_dir, args[2], 256);
 	}
 	if (out_dir->string[out_dir->length] != '/'){
 		appendPtr(out_dir, "/", 1);
@@ -271,7 +271,7 @@ void exportFiles(char** args, int argL){
 		if (curr_f->d_name[0] == '.' && (!(curr_f->d_name[1]) || curr_f->d_name[1] == '.')){
 				continue;
 			}
-		appendNoLen(out_cp, curr_f->d_name);
+		appendNoLen(out_cp, curr_f->d_name, 256);
 		appendPtr(out_cp, " ", 1);
 		appendStr(out_cp, out_dir);
 		printf("%s\n", out_cp->string);
@@ -319,7 +319,7 @@ int main(int argL, char** args){
 		appendStr(cloner, terminal);
 		// remove the space after "--"
 		cloner->length--;
-		appendNoLen(cloner, "working-directory=\"");
+		appendNoLen(cloner, "working-directory=\"", 256);
 		char cwd[256];
 		getcwd(path, 256);
 		growStr(cloner, 257);
@@ -348,7 +348,7 @@ int main(int argL, char** args){
 		return 0;
 	}
 	appendPtr(home, "/", 1);
-	appendNoLen(home, args[2]);
+	appendNoLen(home, args[2], 256);
 	appendPtr(home, ".sh", 3);
 	String* editorPath = emptyStr(home->length + 2);
 	appendPtr(editorPath, "\"", 1);
@@ -364,7 +364,7 @@ int main(int argL, char** args){
 		appendPtr(baseCode, "cd ", 3);
 		char currDir[256];
 		getcwd(currDir, 256);
-		appendNoLen(baseCode, currDir);
+		appendNoLen(baseCode, currDir, 256);
 		appendPtr(baseCode, "\n", 1);
 		appendPtr(baseCode, "exec bash", 9);
 		int file = open(home->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
@@ -440,7 +440,7 @@ int main(int argL, char** args){
 			local = 1;
 			start++;
 		}
-		appendNoLen(fPath, args[start]);
+		appendNoLen(fPath, args[start], 256);
 		struct stat st = {0};
 		if (stat(fPath->string, &st) == 0){
 			loadFiles(args, argL, start);
