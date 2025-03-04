@@ -177,6 +177,10 @@ void loadFiles(char** args, int argL, int start){
 void importFiles(char** args, int argL){
 	String* file_cp = emptyStr(64);
 	appendPtr(file_cp, "cp ", 3);
+	String* ch_ex = buildStr("chmod +x ", 9);
+	appendStr(ch_ex,home);
+	appendPtr(ch_ex, "/", 1);
+	unsigned int prev_ex_len = ch_ex->length;
 	int prev_len = file_cp->length;
 	int file_l = 0;
 	int has_term = 0;
@@ -200,11 +204,15 @@ void importFiles(char** args, int argL){
 			//get filename len
 			if (has_term == 1){
 					if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){
-					appendPtr(file_cp, " ", 1);
+					appendPtr(file_cp, " ", 1);	
+					ch_ex->length  =prev_ex_len;
+					ch_ex->string[prev_ex_len] = '\0';
 					appendStr(file_cp, home);
 					appendSubPtr(file_cp, args[i], j, file_l);
 					system(file_cp->string);
-				} else {
+					appendSubPtr(ch_ex, args[i], j, file_l);
+					system(ch_ex->string);
+					} else {
 					printf("\033[31m file \"%s\" is not a shell file! \n\033[0u", args[i]);
 				}
 			} else {
@@ -230,9 +238,14 @@ void importFiles(char** args, int argL){
 					int sub_l = strlen(curr_file->d_name);
 					if (sub_l > 2 && curr_file->d_name[sub_l-1] == 'h' && curr_file->d_name[sub_l-2] == 's' && curr_file->d_name[sub_l-3] == '.'){
 						appendPtr(file_cp, curr_file->d_name, sub_l);
+						ch_ex->length  =prev_ex_len;
+						ch_ex->string[prev_ex_len] = '\0';
 						appendPtr(file_cp, " ", 1);
 						appendStr(file_cp, home);
 						system(file_cp->string);
+						appendPtr(ch_ex, curr_file->d_name, sub_l);
+						//printf("%s\n", ch_ex->string);
+						system(ch_ex->string);
 					}
 					file_cp->length = dir_l;
 				}
@@ -274,7 +287,7 @@ void exportFiles(char** args, int argL){
 		appendNoLen(out_cp, curr_f->d_name, 256);
 		appendPtr(out_cp, " ", 1);
 		appendStr(out_cp, out_dir);
-		printf("%s\n", out_cp->string);
+		//printf("%s\n", out_cp->string);
 		system(out_cp->string);
 		out_cp->length = prev_l;
 
@@ -440,7 +453,9 @@ int main(int argL, char** args){
 			local = 1;
 			start++;
 		}
+		appendPtr(fPath, "/", 1);
 		appendNoLen(fPath, args[start], 256);
+		printf("%s\n", fPath->string);
 		struct stat st = {0};
 		if (stat(fPath->string, &st) == 0){
 			loadFiles(args, argL, start);
