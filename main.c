@@ -453,9 +453,14 @@ int main(int argL, char** args){
 			local = 1;
 			start++;
 		}
+		if (local && argL < 3 || (argL < 2)){
+			printf("no terminal specified\n");
+			return 0;
+		}
 		appendPtr(fPath, "/", 1);
 		appendNoLen(fPath, args[start], 256);
-		printf("%s\n", fPath->string);
+		appendPtr(fPath, ".sh", 3);
+		//printf("%s\n", fPath->string);
 		struct stat st = {0};
 		if (stat(fPath->string, &st) == 0){
 			loadFiles(args, argL, start);
