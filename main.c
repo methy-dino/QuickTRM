@@ -187,6 +187,7 @@ void importFiles(char** args, int argL){
 	int j = 0;
 	for (int i = 2; i < argL; i++){
 		has_term = 0;
+		j = 0;
 		while (args[i][file_l] != '\0') {
 			if (args[i][file_l] == '.'){
 				has_term = 1;
@@ -200,12 +201,18 @@ void importFiles(char** args, int argL){
 			}
 			file_l++;
 		}
-			appendPtr(file_cp, args[i], file_l);
+		if (args[i][0] == '.' && args[i][1] == '/'){
+			//j = 1;
+			char cwd[256];
+			getcwd(cwd, 256);
+			appendNoLen(file_cp, cwd, 256);
+		}
+			appendSubPtr(file_cp, args[i], j, file_l);
 			//get filename len
 			if (has_term == 1){
-					if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){
+					if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){	
 					appendPtr(file_cp, " ", 1);	
-					ch_ex->length  =prev_ex_len;
+					ch_ex->length = prev_ex_len;
 					ch_ex->string[prev_ex_len] = '\0';
 					appendStr(file_cp, home);
 					appendSubPtr(file_cp, args[i], j, file_l);
