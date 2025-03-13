@@ -260,7 +260,7 @@ void exportFiles(char** args, int argL){
 		printf("no output folder specified.");
 		return;
 	}
-	// TODO: check out validity.
+	struct stat st = {0};	
 	String* out_cp = emptyStr(64);
 	String* out_dir = emptyStr(64);
 	appendPtr(out_cp, "cp ", 3);
@@ -280,6 +280,16 @@ void exportFiles(char** args, int argL){
 	DIR* home_fol = opendir(home->string);
 	struct dirent* curr_f;
 	int prev_l = out_cp->length;
+	printf("%s \n", out_dir->string);
+	if (stat(out_dir->string, &st) != 0){
+		printf("path does not point to a folder\n");
+		return;
+	}
+	// safegguard, just in case.
+	if (!(S_ISDIR(st.st_mode))){	
+		printf("path does not point to a folder.\n");
+		return;
+	}
 	while ((curr_f=readdir(home_fol))!= NULL){
 		if (curr_f->d_name[0] == '.' && (!(curr_f->d_name[1]) || curr_f->d_name[1] == '.')){
 				continue;
