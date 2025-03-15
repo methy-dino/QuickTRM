@@ -15,16 +15,6 @@ String* editor;
 String* terminal;
 String* home;
 int local = 0;
-int strinit(char* sub, char* str){
-	int i = 0;
-	while (sub[i] == str[i]){
-		i++;
-	}
-	if (sub[i] == '\0'){
-		return 0;
-	}
-	return 1;
-}
 void defaults(){
 	struct stat st = {0};
 	if (stat(home->string, &st) != 0){
@@ -166,30 +156,16 @@ void loadFiles(char** args, int argL, int start){
 		}
 		return;
 		}
+
 		while (i < argL){
 			appendNoLen(home, args[i], 256);
 			appendPtr(home, ".sh", 3);
 			if (stat(home->string, &st) != 0){
 				printf("\033[31m invalid terminal to load: \"%s\"\nPROCESS ABORTED \n\033[0m", args[i]);
 			} else {
-				if (local){
-					// this buffer should be enough.
-					char buff[1024];
-					//printf("%s\n",home->string);
-					FILE* save = fopen(home->string, "r");
-					fgets(buff, 1024, save);
-					while (fgets(buff, 1024, save) != NULL){
-						if (strinit("exec bash", buff) == 0){
-							continue;
-						}
-						system(buff);
-					}
-					fclose(save);
-				} else {
 					appendStr(command, home);
 					appendPtr(command, "\"", 1);
 					system(command->string);
-				}
 			}
 			i++;
 			command->length = prevCL;
@@ -211,7 +187,6 @@ void importFiles(char** args, int argL){
 	int j = 0;
 	for (int i = 2; i < argL; i++){
 		has_term = 0;
-		j = 0;
 		while (args[i][file_l] != '\0') {
 			if (args[i][file_l] == '.'){
 				has_term = 1;
@@ -225,18 +200,12 @@ void importFiles(char** args, int argL){
 			}
 			file_l++;
 		}
-		if (args[i][0] == '.' && args[i][1] == '/'){
-			//j = 1;
-			char cwd[256];
-			getcwd(cwd, 256);
-			appendNoLen(file_cp, cwd, 256);
-		}
-			appendSubPtr(file_cp, args[i], j, file_l);
+			appendPtr(file_cp, args[i], file_l);
 			//get filename len
 			if (has_term == 1){
-					if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){	
+					if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){
 					appendPtr(file_cp, " ", 1);	
-					ch_ex->length = prev_ex_len;
+					ch_ex->length  =prev_ex_len;
 					ch_ex->string[prev_ex_len] = '\0';
 					appendStr(file_cp, home);
 					appendSubPtr(file_cp, args[i], j, file_l);
