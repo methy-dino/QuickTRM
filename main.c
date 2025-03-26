@@ -378,17 +378,17 @@ int main(int argL, char** args){
 	appendStr(editorPath, home);
 	appendPtr(editorPath, "\"", 1);
 	appendStr(editor, editorPath);
-	printf("%s \n", home->string);
+	printf("saved as: %s \n", home->string);
 	if (access(home->string, F_OK) != 0){
 		printf("creating terminal template %s: \n", args[2]);
 		String* flagExec = buildStr("chmod +x ", 9);
 		appendStr(flagExec, editorPath);
 		String* baseCode = buildStr("#/bash/sh\n",10);
-		appendPtr(baseCode, "cd ", 3);
+		appendPtr(baseCode, "cd \"", 4);
 		char currDir[256];
 		getcwd(currDir, 256);
 		appendNoLen(baseCode, currDir, 256);
-		appendPtr(baseCode, "\n", 1);
+		appendPtr(baseCode, "\"\n", 2);
 		appendPtr(baseCode, "exec bash", 9);
 		int file = open(home->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
 		write(file, baseCode->string, baseCode->length);
