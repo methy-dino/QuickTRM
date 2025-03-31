@@ -437,21 +437,23 @@ int main(int argL, char** args){
 		FILE* set = fopen(configs->string, "w");
 		fwrite(terminal->string, terminal->length, 1, set);
 		fwrite("\n", 1, 1, set);
-		int i = 0;
-		while (args[2][i] !=  '\0'){
-			i++;
+		int i = strlen(args[2]);
+		fwrite(args[2], i, 1, set);
+		if (args[2][i-1] != ' '){
+			fwrite(" ", 1, 1, set);
 		}
-		fwrite(args[2], i, 1, set);	
 		printf("· terminal:\"%s\" \n", terminal->string);
 		printf("· editor: \"%s\" \n", args[2]);
 		fclose(set);
 	} else if (argL > 2 && strcmp(args[1], "terminal") == 0){
 		FILE* set = fopen(configs->string, "w");
-		int i = 0;
-		while (args[2][i] !=  '\0'){
-			i++;
-		}
+		int i = strlen(args[2]);
 		fwrite(args[2], i, 1, set);
+		if (args[2][i-1] != ' '){
+			fwrite(" ", 1, 1, set);
+		}
+		//arg speficier.
+		fwrite("--", 2, 1, set);
 		fwrite("\n", 1, 1, set);
 		fwrite(editor->string, editor->length, 1, set);
 		fclose(set);
@@ -486,7 +488,7 @@ int main(int argL, char** args){
 			start++;
 		}
 		if (local && argL < 3 || (argL < 2)){
-			printf("no terminal specified\n");
+			printf("no save specified\n");
 			return 0;
 		}
 		appendPtr(fPath, "/", 1);
@@ -499,7 +501,6 @@ int main(int argL, char** args){
 		} else {
 			printf("\033[31m unrecognized command\n\033[0m");
 		}
-		// no need to free "fPath", since it is right before the process end.
 	}
 	return 0;
 }
