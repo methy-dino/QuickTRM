@@ -36,14 +36,18 @@ void loadSettings(){
 	FILE* file;
     file = fopen(configs->string, "r");
 	terminal = emptyStr(64);
-	char read[128];
-	fgets(read, 128, file);
-	appendNoLen(terminal, read, 128);
+	char read[256];
+	fgets(read, 256, file);	
+	appendNoLen(terminal, read, 256);
 	terminal->length--;
 	terminal->string[terminal->length] = '\0';
 	editor = emptyStr(64);
-	fgets(read, 128, file);
-	appendNoLen(editor, read, 128);
+	fgets(read, 256, file);
+	appendNoLen(editor, read, 256);
+	if (editor->string[editor->length - 1] == '\n'){
+		editor->length--;
+		editor->string[terminal->length] = '\0';
+	}
 	fclose(file);
 	home->length--;
 	home->string[home->length] = '\0';
