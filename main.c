@@ -179,12 +179,14 @@ void importFiles(char** args, int argL){
 	appendPtr(file_cp, "cp ", 3);
 	String* ch_ex = buildStr("chmod +x ", 9);
 	appendStr(ch_ex,home);
-	appendPtr(ch_ex, "/", 1);
+	appendPtr(ch_ex, "/", 1);	
 	unsigned int prev_ex_len = ch_ex->length;
 	int prev_len = file_cp->length;
 	int file_l = 0;
 	int has_term = 0;
 	int j = 0;
+	int prev_home = home->length;
+	struct stat st = {0};
 	for (int i = 2; i < argL; i++){
 		has_term = 0;
 		while (args[i][file_l] != '\0') {
@@ -209,6 +211,16 @@ void importFiles(char** args, int argL){
 					ch_ex->string[prev_ex_len] = '\0';
 					appendStr(file_cp, home);
 					appendSubPtr(file_cp, args[i], j, file_l);
+					appendPtr(home, "/", 1);
+					appendSubPtr(home, args[i], j, file_l);
+					if (stat(home->string, &st) == 0){
+						home->length = prev_home;
+						home->string[prev_home] = '\0';
+						printf("file %s was not added, for such file exists in internal quickTRM storage, please delete the internal copy if you wish to add it\n", args[i]);
+						continue;
+					}
+					home->length = prev_home;
+					home->string[prev_home] = '\0';
 					system(file_cp->string);
 					appendSubPtr(ch_ex, args[i], j, file_l);
 					system(ch_ex->string);
@@ -242,6 +254,16 @@ void importFiles(char** args, int argL){
 						ch_ex->string[prev_ex_len] = '\0';
 						appendPtr(file_cp, " ", 1);
 						appendStr(file_cp, home);
+						appendPtr(home, "/", 1);
+						appendPtr(home, curr_file->d_name, sub_l);
+					if (stat(home->string, &st) == 0){
+						home->length = prev_home;
+						home->string[prev_home] = '\0';
+						printf("file %s was not added, for such file exists in internal quickTRM storage, please delete the internal copy if you wish to add it\n", args[i]);
+						continue;
+					}
+					home->length = prev_home;
+					home->string[prev_home] = '\0';
 						system(file_cp->string);
 						appendPtr(ch_ex, curr_file->d_name, sub_l);
 						//printf("%s\n", ch_ex->string);
