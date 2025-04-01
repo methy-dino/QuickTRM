@@ -9,6 +9,7 @@
 #include <pty.h>
 #include <signal.h>
 #include "libs/string.h"
+#include "libs/gaymer_print.h"
 #include <fcntl.h>
 String* configs;
 String* editor;
@@ -18,7 +19,7 @@ int local = 0;
 void defaults(){
 	struct stat st = {0};
 	if (stat(home->string, &st) != 0){
-		printf("no file storage folder found, creating a new one\n");
+		gaymer_print("no file storage folder found, creating a new one\n");
 		mkdir(home->string, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
 	configs = cloneStr(home);
@@ -26,7 +27,7 @@ void defaults(){
 	int settings;
 	if (stat(configs->string, &st) != 0) {
 		settings = open(configs->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
-		printf("settings not found, initializing new settings\n");
+		gaymer_print("settings not found, initializing new settings\n");
 		write(settings, "gnome-terminal -- \nvim ", 22);
 		close(settings);
 	}
@@ -56,7 +57,7 @@ void listSaves(){
 	DIR* folder = opendir(home->string);
 	int currLen = 0;
 	struct dirent* currFile;
-	printf("the current saved terminals are: \n");
+	gaymer_print("the current saved terminals are: \n");
 		while ((currFile=readdir(folder)) != NULL){
 			if (!strcmp (currFile->d_name, "."))
            			 continue;
@@ -69,7 +70,9 @@ void listSaves(){
 			}
 			if (currFile->d_name[currLen - 1] == 'h' && currFile->d_name[currLen - 2] == 's'){
 				currFile->d_name[currLen - 3] = '\0';
-				printf("· %s\n", currFile->d_name);
+				gaymer_print("· ");
+				gaymer_print(currFile->d_name);
+				printf("\n");
 			}
 		}
 }
@@ -98,9 +101,13 @@ void delete(char** args, int argL){
 				appendPtr(home, currFile->d_name, currLen);
 				currFile->d_name[currLen-3] = '\0';
 				if (remove(home->string) == 0){
-						printf("removed saved terminal named \"%s\"\n", currFile->d_name);
-					} else {
-						printf("\033[31m failed to remove saved terminal named \"%s\"\n\033[0m", currFile->d_name);
+						gaymer_print("removed saved terminal named \"");
+						gaymer_print(currFile->d_name);
+						gaymer_print("\"\n");					
+								} else {
+						gaymer_print("failed to remove saved terminal named \"");
+						gaymer_print(currFile->d_name);
+						gaymer_print("\"\n");
 					}	
 			}
 			home->length = prevL;
@@ -112,9 +119,13 @@ void delete(char** args, int argL){
 		appendNoLen(home, args[i], 256);
 		appendPtr(home, ".sh", 3);
 		if (remove(home->string) == 0){
-			printf("removed saved terminal named \"%s\"\n", args[i]);
+			gaymer_print("removed saved terminal named \"");
+			gaymer_print(args[i]);
+			gaymer_print("\"\n");
 		} else {
-			printf("\033[31m failed to remove saved terminal named \"%s\"\n\033[0m", args[i]);
+			gaymer_print("failed to remove saved terminal named \"");
+			gaymer_print(args[i]);
+			gaymer_print("\"\n");
 		}
 		home->length = prevL;
 		home->string[prevL] = '\0';
@@ -165,7 +176,9 @@ void loadFiles(char** args, int argL, int start){
 			appendNoLen(home, args[i], 256);
 			appendPtr(home, ".sh", 3);
 			if (stat(home->string, &st) != 0){
-				printf("\033[31m invalid terminal to load: \"%s\"\nPROCESS ABORTED \n\033[0m", args[i]);
+				gaymer_print("invalid terminal to load:\"");
+				gaymer_print(args[i]);
+				gaymer_print("\"\nPROCESS ABORTED \n");
 			} else {
 					appendStr(command, home);
 					appendPtr(command, "\"", 1);
@@ -220,7 +233,9 @@ void importFiles(char** args, int argL){
 					if (stat(home->string, &st) == 0){
 						home->length = prev_home;
 						home->string[prev_home] = '\0';
-						printf("file %s was not added, for such file exists in internal quickTRM storage, please delete the internal copy if you wish to add it\n", args[i]);
+						gaymer_print("file ");
+						gaymer_print(args[i]);
+						gaymer_print(" was not added, for such file exists in internal quickTRM storage, please delete the internal copy if you wish to add it\n");
 						continue;
 					}
 					home->length = prev_home;
@@ -229,7 +244,9 @@ void importFiles(char** args, int argL){
 					appendSubPtr(ch_ex, args[i], j, file_l);
 					system(ch_ex->string);
 					} else {
-					printf("\033[31m file \"%s\" is not a shell file! \n\033[0u", args[i]);
+					gaymer_print("file \"");
+					gaymer_print(args[i]);			
+					gaymer_print("\" is not a shell file! \n");
 				}
 			} else {
 				appendPtr(file_cp, "/", 1);
@@ -246,7 +263,9 @@ void importFiles(char** args, int argL){
 				}
 				DIR* folder = opendir(full_name->string);
 				if (folder == NULL) {
-					printf("ERR: FOLDER \"%s\" NOT FOUND \n", full_name->string);
+					gaymer_print("ERR: FOLDER \"");
+					gaymer_print(full_name->string);
+					gaymer_print("\" NOT FOUND \n");
 					continue;
 				}
 				struct dirent* curr_file;
@@ -263,7 +282,9 @@ void importFiles(char** args, int argL){
 					if (stat(home->string, &st) == 0){
 						home->length = prev_home;
 						home->string[prev_home] = '\0';
-						printf("file %s was not added, for such file exists in internal quickTRM storage, please delete the internal copy if you wish to add it\n", args[i]);
+						gaymer_print("file ");
+						gaymer_print(args[i]); 
+						gaymer_print("was not added, for such file exists in internal quickTRM storage, please delete the internal copy if you wish to add it\n");
 						continue;
 					}
 					home->length = prev_home;
@@ -283,7 +304,7 @@ void importFiles(char** args, int argL){
 }
 void exportFiles(char** args, int argL){
 	if (argL < 3){
-		printf("no output folder specified.");
+		gaymer_print("no output folder specified.");
 		return;
 	}
 	struct stat st = {0};	
@@ -306,14 +327,14 @@ void exportFiles(char** args, int argL){
 	DIR* home_fol = opendir(home->string);
 	struct dirent* curr_f;
 	int prev_l = out_cp->length;
-	printf("%s \n", out_dir->string);
+	//printf("%s \n", out_dir->string);
 	if (stat(out_dir->string, &st) != 0){
-		printf("path does not point to a folder\n");
+		gaymer_print("path does not point to a folder\n");
 		return;
 	}
 	// safegguard, just in case.
 	if (!(S_ISDIR(st.st_mode))){	
-		printf("path does not point to a folder.\n");
+		gaymer_print("path does not point to a folder.\n");
 		return;
 	}
 	while ((curr_f=readdir(home_fol))!= NULL){
@@ -381,7 +402,7 @@ int main(int argL, char** args){
 		cloner->string[cloner->length] = '\"';
 		cloner->length++;
 		cloner->string[cloner->length] = '\0';
-		printf("cloning directory using:\"%s\" \n", cloner->string);
+		//printf("cloning directory using:\"%s\" \n", cloner->string);
 		system(cloner->string);
 		return 0;
 	} else if (argL > 1 && strcmp(args[1], "load") == 0){
@@ -393,7 +414,7 @@ int main(int argL, char** args){
 		loadFiles(args, argL, start);
 	} else if (argL > 1 && strcmp(args[1], "create") == 0){
 	if (argL != 3){
-		printf("\033[31m failed to parse arguments, invalid quantity \n\033[0m");
+		gaymer_print("failed to parse arguments, invalid quantity \n");
 		return 0;
 	}
 	appendPtr(home, "/", 1);
@@ -404,9 +425,10 @@ int main(int argL, char** args){
 	appendStr(editorPath, home);
 	appendPtr(editorPath, "\"", 1);
 	appendStr(editor, editorPath);
-	printf("saved as: %s \n", home->string);
+	gaymer_print("saved as: ");
+	gaymer_print(home->string);
+	printf("\n");	
 	if (access(home->string, F_OK) != 0){
-		printf("creating terminal template %s: \n", args[2]);
 		String* flagExec = buildStr("chmod +x ", 9);
 		appendStr(flagExec, editorPath);
 		String* baseCode = buildStr("#/bash/sh\n",10);
@@ -421,7 +443,7 @@ int main(int argL, char** args){
 		system(flagExec->string);
 		system(editor->string);
 	} else {
-		printf("a saved terminal with that name already exists, do you wish to edit it? (y/n)  ");
+		gaymer_print("a saved terminal with that name already exists, do you wish to edit it? (y/n)  ");
 		char input;
 		while (0==0){
 			scanf("%c", &input);
@@ -446,8 +468,12 @@ int main(int argL, char** args){
 		if (args[2][i-1] != ' '){
 			fwrite(" ", 1, 1, set);
 		}
-		printf("· terminal:\"%s\" \n", terminal->string);
-		printf("· editor: \"%s\" \n", args[2]);
+		gaymer_print("· terminal:\"");
+		gaymer_print(terminal->string);
+		gaymer_print("\" \n");
+		gaymer_print("· editor:\"");
+		gaymer_print(args[2]);
+		gaymer_print("\" \n");
 		fclose(set);
 	} else if (argL > 2 && strcmp(args[1], "terminal") == 0){
 		FILE* set = fopen(configs->string, "w");
@@ -461,24 +487,32 @@ int main(int argL, char** args){
 		fwrite("\n", 1, 1, set);
 		fwrite(editor->string, editor->length, 1, set);
 		fclose(set);
-		printf("· terminal:\"%s\" \n", args[2]);
-		printf("· editor: \"%s\" \n", editor->string);
+		gaymer_print("· terminal:\"");
+		gaymer_print(args[2]);
+		gaymer_print("\" \n");
+		gaymer_print("· editor:\"");
+		gaymer_print(editor->string);
+		gaymer_print("\" \n");
 	} else if (argL > 1 && strcmp(args[1], "settings") == 0){	
-		printf("· terminal:\"%s\" \n", terminal->string);
-		printf("· editor: \"%s\" \n", editor->string);
+		gaymer_print("· terminal:\"");
+		gaymer_print(terminal->string);
+		gaymer_print("\" \n");
+		gaymer_print("· editor:\"");
+		gaymer_print(editor->string);
+		gaymer_print("\" \n");
 	} else if (argL > 1 && strcmp(args[1], "help") == 0){
-		printf("create <name>\nrunning quickTRM create <name> will attempt to create a shell save in it's internal folder (~/.quickTRM), if a save already exists with that name, it will ask confirmation to edit it.\n\n");
-		printf("delete <names>\ndeletes all saves listed, which are separated by spaces, if it fails to delete any, it will throw an error and continue.\n\n");
-		printf("load <names>\nloads the specified terminals within names, separated by spaces, throws an error for each that is non-existant.\n\n");
-		printf("load local <names>\nloads the specified terminals within names, exactly as load does, except it does not open new terminal windows.\n\n");
-		printf("list\nlists all the saved files on the .quickTRM directory, also runs if called quickTRM view.\n\n");
-		printf("clone\nclones the current terminal by opening another terminal in the same directory.\n\n");
-		printf("editor <name>\nchanges the editor on the configurations file (default is \"vim \"), don't forget to quote the name and put a space in the end.\n\n");
-		printf("terminal <name>\nchanges the terminal on the configurations file (default is gnome-terminal -- ).\n\n");
-		printf("settings\ndisplay the currently set terminal, and editor, between quotes.\n\n");	
-		printf("export <fPath>\n copies all the saved data of quickTRM to the specified directory\n");
-		printf("import <fPath>\n imports the shell files from <fPath> to quickTRM's internal folder\n");
-		printf("help\ndisplays information about all the quickTRM arguments and commands\n");
+		gaymer_print("create <name>\nrunning quickTRM create <name> will attempt to create a shell save in it's internal folder (~/.quickTRM), if a save already exists with that name, it will ask confirmation to edit it.\n\n");
+		gaymer_print("delete <names>\ndeletes all saves listed, which are separated by spaces, if it fails to delete any, it will throw an error and continue.\n\n");
+		gaymer_print("load <names>\nloads the specified terminals within names, separated by spaces, throws an error for each that is non-existant.\n\n");
+		gaymer_print("load local <names>\nloads the specified terminals within names, exactly as load does, except it does not open new terminal windows.\n\n");
+		gaymer_print("list\nlists all the saved files on the .quickTRM directory, also runs if called quickTRM view.\n\n");
+		gaymer_print("clone\nclones the current terminal by opening another terminal in the same directory.\n\n");
+		gaymer_print("editor <name>\nchanges the editor on the configurations file (default is \"vim \"), don't forget to quote the name and put a space in the end.\n\n");
+		gaymer_print("terminal <name>\nchanges the terminal on the configurations file (default is gnome-terminal -- ).\n\n");
+		gaymer_print("settings\ndisplay the currently set terminal, and editor, between quotes.\n\n");	
+		gaymer_print("export <fPath>\n copies all the saved data of quickTRM to the specified directory\n");
+		gaymer_print("import <fPath>\n imports the shell files from <fPath> to quickTRM's internal folder\n");
+		gaymer_print("help\ndisplays information about all the quickTRM arguments and commands\n");
 	} else if (argL > 1 && strcmp(args[1], "import") == 0){
 		importFiles(args, argL);
 	} else if (argL > 1 && strcmp(args[1], "export") == 0){
@@ -492,7 +526,7 @@ int main(int argL, char** args){
 			start++;
 		}
 		if (local && argL < 3 || (argL < 2)){
-			printf("no save specified\n");
+			gaymer_print("no save specified\n");
 			return 0;
 		}
 		appendPtr(fPath, "/", 1);
@@ -503,7 +537,7 @@ int main(int argL, char** args){
 		if (stat(fPath->string, &st) == 0){
 			loadFiles(args, argL, start);
 		} else {
-			printf("\033[31m unrecognized command\n\033[0m");
+			gaymer_print("unrecognized command\n");
 		}
 	}
 	return 0;
