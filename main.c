@@ -62,11 +62,8 @@ void listSaves(){
            			 continue;
         		if (!strcmp (currFile->d_name, ".."))
             			continue;
-			// cuts .sh out of the name and doesn't log undesired files
-			currLen = 0;
-			while (currFile->d_name[currLen] != '\0'){
-				currLen++;
-			}
+			/* cuts .sh out of the name and doesn't log undesired files*/
+			currLen = strlen(currFile->d_name);
 			if (currFile->d_name[currLen - 1] == 'h' && currFile->d_name[currLen - 2] == 's'){
 				currFile->d_name[currLen - 3] = '\0';
 				printf("· %s\n", currFile->d_name);
@@ -74,10 +71,9 @@ void listSaves(){
 		}
 }
 void delete(char** args, int argL){
-	// We can clone home, but since we won't use it further, it is useless.
-	//String* currFilePath = cloneStr(home);
+	/* We can clone home, but since we won't use it further, it is useless.*/
 	appendPtr(home, "/", 1);
-	// save length for terminator shenanigans.
+	/* save length for terminator shenanigans.*/
 	int prevL = home->length;
 	if (strcmp(args[2], "ALL SAVES") == 0){
 		DIR* folder = opendir(home->string);
@@ -108,7 +104,8 @@ void delete(char** args, int argL){
 		}
 		return;
 	}
-	for (int i = 2; i < argL; i++){
+	int i = 2;
+	for (i = 2; i < argL; i++){
 		appendNoLen(home, args[i], 256);
 		appendPtr(home, ".sh", 3);
 		if (remove(home->string) == 0){
@@ -191,7 +188,8 @@ void importFiles(char** args, int argL){
 	int j = 0;
 	int prev_home = home->length;
 	struct stat st = {0};
-	for (int i = 2; i < argL; i++){
+	int i = 2;
+	for (i = 2; i < argL; i++){
 		has_term = 0;
 		while (args[i][file_l] != '\0') {
 			if (args[i][file_l] == '.'){
@@ -207,7 +205,7 @@ void importFiles(char** args, int argL){
 			file_l++;
 		}
 			appendPtr(file_cp, args[i], file_l);
-			//get filename len
+			/*get filename len*/
 			if (has_term == 1){
 					if (args[i][file_l - 1] == 'h' && args[i][file_l - 2] == 's' && args[i][file_l - 3] == '.'){
 					appendPtr(file_cp, " ", 1);	
@@ -234,7 +232,6 @@ void importFiles(char** args, int argL){
 			} else {
 				appendPtr(file_cp, "/", 1);
 				int dir_l = file_cp->length;
-				// DONE.
 				String* full_name = emptyStr(64);
 				if (args[i][0] == '.'){
 					char cwd[256];
@@ -270,13 +267,11 @@ void importFiles(char** args, int argL){
 					home->string[prev_home] = '\0';
 						system(file_cp->string);
 						appendPtr(ch_ex, curr_file->d_name, sub_l);
-						//printf("%s\n", ch_ex->string);
 						system(ch_ex->string);
 					}
 					file_cp->length = dir_l;
 				}
 			}
-			//printf("%s\n",file_cp->string);
 		file_cp->length = prev_len;
 		file_cp->string[prev_len] = '\0';
 	}
@@ -311,7 +306,7 @@ void exportFiles(char** args, int argL){
 		printf("path does not point to a folder\n");
 		return;
 	}
-	// safegguard, just in case.
+	/* safegguard, just in case.*/
 	if (!(S_ISDIR(st.st_mode))){	
 		printf("path does not point to a folder.\n");
 		return;
@@ -323,7 +318,6 @@ void exportFiles(char** args, int argL){
 		appendNoLen(out_cp, curr_f->d_name, 256);
 		appendPtr(out_cp, " ", 1);
 		appendStr(out_cp, out_dir);
-		//printf("%s\n", out_cp->string);
 		system(out_cp->string);
 		out_cp->length = prev_l;
 
@@ -336,7 +330,7 @@ int main(int argL, char** args){
 	while (user[userL] != '\0') {
 		userL++;
 	}
-	//"/home/" + username + "/.quickTRM"+ '\0'
+	/*"/home/" + username + "/.quickTRM"+ '\0'*/
 	char path[6+userL+10];
 	path[0] = '/';
 	path[1] = 'h';
@@ -344,7 +338,8 @@ int main(int argL, char** args){
 	path[3] = 'm';
 	path[4] = 'e';
 	path[5] = '/';
-	for (int i = 0; i < userL; i++){
+	int i = 0;
+	for (i = 0; i < userL; i++){
 		path[i+6] = user[i];
 	}
 	path[userL+6] = '/';
@@ -362,11 +357,9 @@ int main(int argL, char** args){
 	defaults();
 	loadSettings();
 	if (argL == 2 && strcmp(args[1], "clone") == 0){
-		// getcwd doesn't finish the string????
-		// data will PROBABLY BE SAFE, but just to be sure
 		String* cloner = buildStr("#!/bin/bash \n", 13);
 		appendStr(cloner, terminal);
-		// remove the space after "--"
+		/* remove the space after "--"*/
 		cloner->length--;
 		appendNoLen(cloner, "working-directory=\"", 256);
 		char cwd[256];
@@ -456,7 +449,7 @@ int main(int argL, char** args){
 		if (args[2][i-1] != ' '){
 			fwrite(" ", 1, 1, set);
 		}
-		//arg speficier.
+		/*arg speficier.*/
 		fwrite("--", 2, 1, set);
 		fwrite("\n", 1, 1, set);
 		fwrite(editor->string, editor->length, 1, set);
@@ -485,7 +478,7 @@ int main(int argL, char** args){
 		exportFiles(args, argL);
 	} else {
 		String* fPath = cloneStr(home);
-		// implicit file opening
+		/* implicit file opening*/
 		int start = 1;
 		if (argL > 1 && strcmp(args[start], "local") == 0){
 			local = 1;
@@ -498,7 +491,6 @@ int main(int argL, char** args){
 		appendPtr(fPath, "/", 1);
 		appendNoLen(fPath, args[start], 256);
 		appendPtr(fPath, ".sh", 3);
-		//printf("%s\n", fPath->string);
 		struct stat st = {0};
 		if (stat(fPath->string, &st) == 0){
 			loadFiles(args, argL, start);
