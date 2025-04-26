@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.0.0)
-project(quickTRM VERSION 1.1.2)
+project(quickTRM VERSION 1.1.3)
 set (CPACK_RESOURCE_FILE_LICENSE "/home/meth/gitProjects/bashShell/LICENSE")
 add_executable(${PROJECT_NAME} main.c libs/string.c)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

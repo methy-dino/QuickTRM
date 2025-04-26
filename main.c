@@ -142,10 +142,7 @@ void loadFiles(char** args, int argL, int start){
       	if (!strcmp (currFile->d_name, "..")){
         	    	continue;
 			}
-			currLen = 0;
-			while (currFile->d_name[currLen] != '\0'){
-				currLen++;
-			}
+			currLen = strlen(currFile->d_name);
 			if (currFile->d_name[currLen - 1] == 'h' && currFile->d_name[currLen - 2] == 's'){
 				appendStr(command, home);
 				appendPtr(command, currFile->d_name, currLen);
@@ -155,6 +152,7 @@ void loadFiles(char** args, int argL, int start){
 			command->length = prevCL;
 			command->string[prevCL] = '\0';
 		}
+		discardStr(command);
 		return;
 		}
 
@@ -277,7 +275,7 @@ void importFiles(char** args, int argL){
 	}
 }
 void exportFiles(char** args, int argL){
-	if (argL < 3){
+	if (argL < 2){
 		printf("no output folder specified.");
 		return;
 	}
@@ -415,15 +413,18 @@ int main(int argL, char** args){
 		system(editor->string);
 	} else {
 		printf("a saved terminal with that name already exists, do you wish to edit it? (y/n)  ");
-		char input;
+		char input[4] = {0};
 		while (0==0){
-			scanf("%c", &input);
-			if ((input == 'y' || input == 'Y')){
-				system(editor->string);
-				return 0;
-			} else if ((input == 'n' || input == 'N')){
-				return 0;
+			scanf("%3s", input);
+			if (strlen(input) < 2){
+				if ((*input == 'y' || *input == 'Y')){
+					system(editor->string);
+					return 0;
+				} else if ((*input == 'n' || *input == 'N')){
+					return 0;
+				}
 			}
+			printf("try again (y/n) ");
 		}
 	}
 	} else if (argL > 1 && (strcmp(args[1], "delete") == 0 || strcmp(args[1], "remove") == 0)){
@@ -496,7 +497,51 @@ int main(int argL, char** args){
 			loadFiles(args, argL, start);
 		} else {
 			printf("\033[31m unrecognized command\n\033[0m");
+			if (argL < 2){
+				return 0;
+			}
+			printf("do you wish to create a save with that name? (y/n)  ");
+		char input[4] = {0};
+		while (0==0){
+			scanf("%3s", input);
+			if (strlen(input) < 2){
+				if ((*input == 'y' || *input == 'Y')){
+					appendPtr(home, "/", 1);
+					appendNoLen(home, args[1], 256);
+					appendPtr(home, ".sh", 3);
+					String* editorPath = emptyStr(home->length + 2);
+					appendPtr(editorPath, "\"", 1);
+					appendStr(editorPath, home);
+					appendPtr(editorPath, "\"", 1);
+					appendStr(editor, editorPath);
+					printf("saved as: %s \n", home->string);
+					if (access(home->string, F_OK) != 0){
+						printf("creating terminal template %s: \n", args[1]);
+						String* flagExec = buildStr("chmod +x ", 9);
+						appendStr(flagExec, editorPath);
+						String* baseCode = buildStr("#/bash/sh\n",10);
+						appendPtr(baseCode, "cd \"", 4);
+						char currDir[256];
+						getcwd(currDir, 256);
+						appendNoLen(baseCode, currDir, 256);
+						appendPtr(baseCode, "\"\n", 2);
+						appendPtr(baseCode, "exec bash", 9);
+						int file = open(home->string, O_WRONLY | O_APPEND | O_CREAT, 0644);
+						write(file, baseCode->string, baseCode->length);
+						system(flagExec->string);
+						system(editor->string);
+						discardStr(editorPath);
+						discardStr(flagExec);
+					}
+					return 0;
+				} else if ((*input == 'n' || *input == 'N')){
+					return 0;
+				}
+			}
+			printf("try again (y/n) ");
 		}
+		}
+		discardStr(fPath);
 	}
 	return 0;
 }

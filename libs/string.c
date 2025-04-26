@@ -8,12 +8,10 @@ int growStr(String* str, size_t inc){
 	size_t newL = inc + str->maxCapacity;
 	char* nStr = NULL; 
 	char count = 0;
-	while ((nStr = (char*)malloc(newL)) == NULL && count < 3){
+	while ((nStr = (char*)realloc(str->string, newL)) == NULL && count < 3){
 		count++;
 	}
 	if (count == 3) return 1;
-	memcpy(nStr, str->string, str->length);
-	free(str->string);
 	str->string = nStr;
   str->maxCapacity = newL;
 	str->string[str->length] = '\0';
@@ -72,10 +70,9 @@ String* initStr(char* rawStr, size_t rawStrLen){
 String* buildStr(char* pointer, size_t length){
 		String* string  = (String*)malloc(sizeof(struct string));
 		string->maxCapacity = length*1.5+1;
-		string->length = length;
 		string->string = (char*)malloc(string->maxCapacity);
 		memcpy(string->string, pointer, length);
-		string->length += length;
+		string->length = length;
 	string->string[string->length] = '\0';
 	return string;
 }
@@ -467,6 +464,40 @@ void replaceLastStr(String* str, String* target, String* sub){
 	}
 	str->string[str->length] = '\0';
 }
+char insertChar(String* str, char ch, size_t index){
+	if (str->length == str->maxCapacity - 1){
+		if (growStr(str, str->length / 2)){
+			return 1;
+		}
+	}
+	size_t curr = str->length;
+	while (curr > index){
+		memcpy(str->string + curr, str->string + curr - 1, 1);
+		curr--;
+	}
+	str->length++;
+	str->string[str->length] = '\0';
+	str->string[index] = ch;
+	return 0;
+}
+char insertStr(String* str, String* str2, size_t index){
+	if (str->length > str->maxCapacity - str2->length){
+		if (growStr(str, str->length / 2)){
+			return 1;
+		}
+	}
+	/* -1 for the second '/0'*/
+	size_t curr = str->length + str2->length - 1;
+	while (curr > index-1){
+		memcpy(str->string + curr + str2->length, str->string + curr, 1);
+		curr--;
+	}
+	str->length += str2->length;
+	str->string[str->length] = '\0';
+	memcpy(str->string + index, str2->string, str2->length);
+	return 0;
+
+}
 /* returns 1 if the strings are equal, otherwise returns 0.
  * does not compare after String.length, it may contain trash data after that.
  * trash data is non-zeroed and unsanitized.
@@ -607,25 +638,22 @@ String* splitByStr(String* str, String* divisor, size_t* len){
 	return toRet;
 }
 
-/* reduces the String* str's memory allocation by reduction. */
-void reduceStr(String* str, size_t reduction){
+/* reduces the String* str's memory allocation by reduction, assumes reduction wont decrease size to  <= 0 */
+int reduceStr(String* str, const size_t reduction){
 	size_t newL = str->maxCapacity - reduction;
-	char* newString = (char*) malloc(newL);
-	size_t i = 0;
-	for (i = 0; i < newL; i++){
-		newString[i] = str->string[i];
+	void* new = realloc(str->string, newL);
+	if (new == NULL){
+		return 1;
 	}
-	free(str->string);
-	str->string = newString;
+	str->string = new;
 	str->maxCapacity = newL;
-	str->length = newL-1;
-	str->string[newL-1] = '\0';
+	str->length = newL > str->length ? str->length : newL-1;
+	str->string[str->length] = '\0';
+	return 0;
 }
 
 /* sets the String* str's memory allocation to be exact with it's current contents*/
-void trimEnd(String* str){
-	reduceStr(str, str->maxCapacity - str->length);
-}
+#define trimEnd(str) reduceStr(str, str->maxCapacity - str->length-1);
 /* it is a void* to easier integration to libs with need of free functions.
  * frees the String* str memory */
 void discardStr(void* str){
