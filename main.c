@@ -470,9 +470,10 @@ int main(int argL, char** args){
 		printf("editor <name>\nchanges the editor on the configurations file (default is \"vim \"), don't forget to quote the name and put a space in the end.\n\n");
 		printf("terminal <name>\nchanges the terminal on the configurations file (default is gnome-terminal -- ).\n\n");
 		printf("settings\ndisplay the currently set terminal, and editor, between quotes.\n\n");	
-		printf("export <fPath>\n copies all the saved data of quickTRM to the specified directory\n");
-		printf("import <fPath>\n imports the shell files from <fPath> to quickTRM's internal folder\n");
-		printf("help\ndisplays information about all the quickTRM arguments and commands\n");
+		printf("export <fPath>\ncopies all the saved data of quickTRM to the specified directory\n\n");
+		printf("import <fPath>\nimports the shell files from <fPath> to quickTRM's internal folder.\n\n");
+		printf("if the first argument is invalid, quickTRM will try to check if a save with that name exists, and open it, otherwise it will ask to create it.\n\n");
+		printf("help\ndisplays information about all the quickTRM arguments and commands.\n");
 	} else if (argL > 1 && strcmp(args[1], "import") == 0){
 		importFiles(args, argL);
 	} else if (argL > 1 && strcmp(args[1], "export") == 0){
@@ -496,7 +497,7 @@ int main(int argL, char** args){
 		if (stat(fPath->string, &st) == 0){
 			loadFiles(args, argL, start);
 		} else {
-			printf("\033[31m unrecognized command\n\033[0m");
+			printf("\033[31munrecognized command\n\033[0m");
 			if (argL < 2){
 				return 0;
 			}
