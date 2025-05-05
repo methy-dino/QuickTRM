@@ -395,9 +395,8 @@ int main(int argL, char** args){
 	appendStr(editorPath, home);
 	appendPtr(editorPath, "\"", 1);
 	appendStr(editor, editorPath);
-	printf("saved as: %s \n", home->string);
+	printf("saved as: \"%s\" \n", home->string);
 	if (access(home->string, F_OK) != 0){
-		printf("creating terminal template %s: \n", args[2]);
 		String* flagExec = buildStr("chmod +x ", 9);
 		appendStr(flagExec, editorPath);
 		String* baseCode = buildStr("#/bash/sh\n",10);
@@ -515,9 +514,8 @@ int main(int argL, char** args){
 					appendStr(editorPath, home);
 					appendPtr(editorPath, "\"", 1);
 					appendStr(editor, editorPath);
-					printf("saved as: %s \n", home->string);
+					printf("saved as: \"%s\" \n", home->string);
 					if (access(home->string, F_OK) != 0){
-						printf("creating terminal template %s: \n", args[1]);
 						String* flagExec = buildStr("chmod +x ", 9);
 						appendStr(flagExec, editorPath);
 						String* baseCode = buildStr("#/bash/sh\n",10);
