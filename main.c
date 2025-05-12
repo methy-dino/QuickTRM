@@ -501,10 +501,24 @@ int main(int argL, char** args){
 				return 0;
 			}
 			printf("do you wish to create a save with that name? (y/n)  ");
-		char input[4] = {0};
-		while (0==0){
-			scanf("%3s", input);
-			if (strlen(input) < 2){
+			fflush(stdout);
+		char input[64];
+		struct timeval timeout;
+		fd_set in;
+		int read_status = 0;
+		int total = 0;
+		while (1){		
+			FD_ZERO(&in);
+			FD_SET(STDIN_FILENO, &in);
+			timeout.tv_sec = 10;
+			timeout.tv_usec = 0;
+			read_status = select(1, &in, NULL, NULL, &timeout);
+			if (!read_status){
+				printf("\n");
+				return 0;
+			}
+			total = read(0, &input, 63);
+			if (total == 2){
 				if ((*input == 'y' || *input == 'Y')){
 					appendPtr(home, "/", 1);
 					appendNoLen(home, args[1], 256);
@@ -538,6 +552,7 @@ int main(int argL, char** args){
 				}
 			}
 			printf("try again (y/n) ");
+			fflush(stdout);
 		}
 		}
 		discardStr(fPath);
