@@ -361,11 +361,11 @@ int main(int argL, char** args){
 		cloner->length--;
 		appendNoLen(cloner, "working-directory=\"", 256);
 		char cwd[256];
-		getcwd(path, 256);
+		getcwd(cwd, 256);
 		growStr(cloner, 257);
 		int i = 0;
-		while (path[i] != 0){
-			cloner->string[cloner->length] = path[i];
+		while (cwd[i] != 0){
+			cloner->string[cloner->length] = cwd[i];
 			cloner->length++;
 			i++;
 		}
@@ -413,6 +413,9 @@ int main(int argL, char** args){
 	} else {
 		printf("a saved terminal with that name already exists, do you wish to edit it? (y/n)  ");
 		char input[4] = {0};
+		if (stdin == NULL){
+			exit(0);
+		}
 		while (0==0){
 			scanf("%3s", input);
 			if (strlen(input) < 2){
@@ -501,6 +504,9 @@ int main(int argL, char** args){
 				return 0;
 			}
 			printf("do you wish to create a save with that name? (y/n)  ");
+			if (stdin == NULL){
+				exit(0);
+			}
 			fflush(stdout);
 		char input[64];
 		struct timeval timeout;
