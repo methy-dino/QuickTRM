@@ -323,35 +323,39 @@ void exportFiles(char** args, int argL){
 	closedir(home_fol);
 }
 int main(int argL, char** args){
-	char* user = getlogin();
-	int userL = 0;
-	while (user[userL] != '\0') {
-		userL++;
+	char* hm;
+	if ((hm = getenv("HOME")) != NULL){
+		home = buildStr(hm, strlen(hm));
+		appendNoLen(home, "/.quickTRM", 300);
+	} else {
+		hm = getlogin();
+		int userL = 0;
+		userL = strlen(hm);
+		/*"/home/" + username + "/.quickTRM"+ '\0'*/
+		char path[6+userL+10];
+		path[0] = '/';
+		path[1] = 'h';
+		path[2] = 'o';
+		path[3] = 'm';
+		path[4] = 'e';
+		path[5] = '/';
+		int i = 0;
+		for (i = 0; i < userL; i++){
+			path[i+6] = hm[i];
+		}
+		path[userL+6] = '/';
+		path[userL+7] = '.';
+		path[userL+8] = 'q';
+		path[userL+9] = 'u';
+		path[userL+10] = 'i';
+		path[userL+11] = 'c';
+		path[userL+12] = 'k';
+		path[userL+13] = 'T';
+		path[userL+14] = 'R';
+		path[userL+15] = 'M';
+		path[userL+16] = '\0';
+		home = buildStr(path, userL+16);
 	}
-	/*"/home/" + username + "/.quickTRM"+ '\0'*/
-	char path[6+userL+10];
-	path[0] = '/';
-	path[1] = 'h';
-	path[2] = 'o';
-	path[3] = 'm';
-	path[4] = 'e';
-	path[5] = '/';
-	int i = 0;
-	for (i = 0; i < userL; i++){
-		path[i+6] = user[i];
-	}
-	path[userL+6] = '/';
-	path[userL+7] = '.';
-	path[userL+8] = 'q';
-	path[userL+9] = 'u';
-	path[userL+10] = 'i';
-	path[userL+11] = 'c';
-	path[userL+12] = 'k';
-	path[userL+13] = 'T';
-	path[userL+14] = 'R';
-	path[userL+15] = 'M';
-	path[userL+16] = '\0';
-	home = buildStr(path, userL+16);
 	defaults();
 	loadSettings();
 	if (argL == 2 && strcmp(args[1], "clone") == 0){
@@ -384,7 +388,7 @@ int main(int argL, char** args){
 		loadFiles(args, argL, start);
 	} else if (argL > 1 && strcmp(args[1], "create") == 0){
 	if (argL != 3){
-		printf("\033[31m failed to parse arguments, invalid quantity \n\033[0m");
+		printf("failed to parse arguments, invalid quantity!");
 		return 0;
 	}
 	appendPtr(home, "/", 1);
@@ -488,7 +492,7 @@ int main(int argL, char** args){
 			local = 1;
 			start++;
 		}
-		if (local && argL < 3 || (argL < 2)){
+		if ((local && argL < 3) || (argL < 2)){
 			printf("no save specified\n");
 			return 0;
 		}
